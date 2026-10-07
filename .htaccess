@@ -1,0 +1,17 @@
+Options -Indexes
+DirectoryIndex public/index.php
+RewriteEngine On
+
+# Keep application source, configuration, database files, and local secrets private.
+RewriteRule ^(?:app|config|database)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:\.git|\.agents|\.codex|\.aws)(?:/|$) - [F,L,NC]
+RewriteRule ^\.env(?:$|[./]) - [F,L,NC]
+
+# The project virtual host points at the repository root; expose only public assets.
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+RewriteRule ^uploads/(.*)$ public/uploads/$1 [L]
+
+# Route application URLs through the public front controller.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ public/index.php [L]

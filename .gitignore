@@ -1,0 +1,3 @@
+.env
+/public/uploads/payment-proofs/*
+!/public/uploads/payment-proofs/.gitkeep
