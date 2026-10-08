@@ -32,26 +32,30 @@ final class AdminController extends Controller
 
     public function save(): void
     {
-        $this->requireValidCsrf();$kind=(string)($_POST['kind']??'');
+        $this->requireValidCsrf();$kind=$this->scalar($_POST['kind']??null);
         try {
             if(in_array($kind,['airlines','airports','flights'],true))$this->model->save($kind,$_POST);
-            elseif($kind==='seats')$this->model->generateSeats((int)($_POST['flight_id']??0),(int)($_POST['rows']??0),(array)($_POST['letters']??[]),(string)($_POST['cabin_class']??''));
-            elseif($kind==='seat_status')$this->model->seatStatus((int)($_POST['flight_id']??0),(string)($_POST['status']??''));
-            elseif($kind==='booking_status')$this->model->bookingStatus((int)($_POST['id']??0),(string)($_POST['status']??''));
-            elseif($kind==='payment')$this->model->reviewPayment((int)($_POST['id']??0),(string)($_POST['decision']??''));
+            elseif($kind==='seats')$this->model->generateSeats($this->positiveInt($_POST['flight_id']??null),$this->positiveInt($_POST['rows']??null),(is_array($_POST['letters']??null)?$_POST['letters']:[]),$this->scalar($_POST['cabin_class']??null));
+            elseif($kind==='seat_status')$this->model->seatStatus($this->positiveInt($_POST['flight_id']??null),$this->scalar($_POST['status']??null));
+            elseif($kind==='booking_status')$this->model->bookingStatus($this->positiveInt($_POST['id']??null),$this->scalar($_POST['status']??null));
+            elseif($kind==='payment')$this->model->reviewPayment($this->positiveInt($_POST['id']??null),$this->scalar($_POST['decision']??null));
             else throw new RuntimeException('Unknown admin action.');
-            Session::flash('success','Changes saved successfully.');
+            $message=match($kind){'payment'=>$this->scalar($_POST['decision']??null)==='verified'?'Payment verified. The booking is confirmed and e-tickets are ready.':'Payment rejected. The booking remains unconfirmed.','booking_status'=>'Booking status updated.','seats'=>'Seat layout generated.','seat_status'=>'Seat availability updated.',default=>'Changes saved successfully.'};
+            Session::flash('success',$message);
         }catch(\Throwable $e){error_log('Admin action error: '.$e->getMessage());Session::flash('errors',[($e instanceof RuntimeException&&!($e instanceof \PDOException))?$e->getMessage():'Could not save changes. Check the details and try again.']);}
-        $back=(string)($_POST['return_to']??'/admin');if(!in_array($back,['/admin','/admin/airlines','/admin/airports','/admin/flights','/admin/seats','/admin/bookings','/admin/payments'],true))$back='/admin';$this->redirect($back);
+        $back=$this->scalar($_POST['return_to']??null);if(!in_array($back,['/admin','/admin/airlines','/admin/airports','/admin/flights','/admin/seats','/admin/bookings','/admin/payments'],true))$back='/admin';$this->redirect($back);
     }
 
     public function proof(): void
     {
         $id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);$relative=$id?$this->model->proofPath((int)$id):null;
-        if(!$relative){http_response_code(404);exit;}
+        if(!$relative){\App\Core\HttpError::render(404);return;}
         $base=realpath(BASE_PATH.'/storage/payment-proofs');$file=realpath(BASE_PATH.'/storage/payment-proofs/'.basename($relative));
-        if(!$base||!$file||!str_starts_with($file,$base.DIRECTORY_SEPARATOR)||!is_file($file)){http_response_code(404);exit;}
-        $mime=(new \finfo(FILEINFO_MIME_TYPE))->file($file);if(!in_array($mime,['image/jpeg','image/png','image/webp','application/pdf'],true)){http_response_code(415);exit;}
+        if(!$base||!$file||!str_starts_with($file,$base.DIRECTORY_SEPARATOR)||!is_file($file)){\App\Core\HttpError::render(404);return;}
+        $mime=(new \finfo(FILEINFO_MIME_TYPE))->file($file);if(!in_array($mime,['image/jpeg','image/png','image/webp','application/pdf'],true)){\App\Core\HttpError::render(415,'This payment proof format cannot be downloaded.');return;}
         header('Content-Type: '.$mime);header('Content-Length: '.(string)filesize($file));header('X-Content-Type-Options: nosniff');header('Content-Disposition: attachment; filename="payment-proof-'.$id.'.'.($mime==='application/pdf'?'pdf':'img').'"');readfile($file);
     }
+
+    private function scalar(mixed $value): string { return is_scalar($value)?(string)$value:''; }
+    private function positiveInt(mixed $value): int { $validated=filter_var($value,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);if($validated===false)throw new RuntimeException('Choose a valid record.');return (int)$validated; }
 }

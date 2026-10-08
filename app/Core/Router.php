@@ -33,9 +33,11 @@ final class Router
         $handler = $this->routes[strtoupper($method)][$path] ?? null;
 
         if ($handler === null) {
-            http_response_code(404);
-            header('Content-Type: text/plain; charset=utf-8');
-            echo 'Not Found';
+            $knownPath = false;
+            foreach ($this->routes as $routes) {
+                if (isset($routes[$path])) { $knownPath = true; break; }
+            }
+            HttpError::render($knownPath ? 405 : 404);
             return;
         }
 

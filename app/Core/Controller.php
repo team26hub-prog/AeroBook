@@ -22,8 +22,7 @@ abstract class Controller
             return;
         }
 
-        http_response_code(419);
-        View::render('errors/419');
+        HttpError::render(419);
         exit;
     }
 

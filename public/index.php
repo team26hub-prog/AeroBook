@@ -28,6 +28,11 @@ spl_autoload_register(static function (string $class): void {
 
 require BASE_PATH . '/config/bootstrap.php';
 
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
 $router = new Router();
 $authMiddleware = new AuthMiddleware();
 
@@ -110,4 +115,11 @@ $router->get('/admin/payment-proof', static function () use ($authMiddleware): m
     return $authMiddleware->handle('admin', static fn () => (new AdminController())->proof());
 });
 
-$router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');
+try {
+    $router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');
+} catch (Throwable $exception) {
+    error_log('Unhandled application error: ' . $exception->getMessage());
+    $debug = (bool) ($GLOBALS['config']['app']['debug'] ?? false)
+        && ($GLOBALS['config']['app']['environment'] ?? 'production') !== 'production';
+    \App\Core\HttpError::render(500, $debug ? 'An internal error occurred. Check the PHP error log for details.' : null);
+}

@@ -47,7 +47,7 @@ final class ManualPayment extends Model
 
     public function submit(int $bookingId,int $customerId,array $input): void
     {
-        $method=(string)($input['method']??'');
+        $method=is_scalar($input['method']??null)?(string)$input['method']:'';
         if(!in_array($method,['bank_transfer','bank_deposit','mobile_wallet','cash','other'],true))throw new RuntimeException('Choose one of the available manual payment methods.');
         $sender=trim($this->scalar($input['sender_name']??null));
         if($sender===''||$this->length($sender)>150)throw new RuntimeException('Enter the sender or account holder name (maximum 150 characters).');
@@ -65,7 +65,7 @@ final class ManualPayment extends Model
 
         $this->db->beginTransaction();
         try{
-            $q=$this->db->prepare('SELECT id,status,total_amount,booked_at FROM bookings WHERE id=? AND user_id=? FOR UPDATE');
+            $q=$this->db->prepare('SELECT id,status,total_amount,currency,booked_at FROM bookings WHERE id=? AND user_id=? FOR UPDATE');
             $q->execute([$bookingId,$customerId]);$booking=$q->fetch();
             if(!$booking||$booking['status']!=='pending')throw new RuntimeException('Only a pending booking can receive a payment submission.');
             $paidTime=$paidAt->format('Y-m-d H:i:s');

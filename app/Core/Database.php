@@ -30,6 +30,10 @@ final class Database
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
 
+        // Keep MySQL's NOW()/CURRENT_TIMESTAMP values aligned with PHP's configured application timezone.
+        $offset = (new \DateTimeImmutable('now'))->format('P');
+        self::$connection->exec('SET time_zone = ' . self::$connection->quote($offset));
+
         return self::$connection;
     }
 }

@@ -17,6 +17,8 @@ AeroBook is an online airline ticketing system built with core PHP, MySQL, PDO, 
 
 The front controller loads environment configuration from `.env`. Point the web server at `public/` so application code and local environment files stay outside the document root. The root `.htaccess` also disables directory listings and blocks direct access to the private source/configuration folders when the Laragon virtual host uses the project root.
 
+For an existing database created from an older schema, apply each migration in `database/migrations/` in numeric order, skipping migrations already applied. The current `schema.sql` already includes those migrated columns for fresh installs. Set `APP_TIMEZONE` to the application's local timezone; it defaults to `Asia/Karachi` and is also used to align PHP and MySQL date/time operations.
+
 ## Authentication
 
 - Customer registration and sign-in: `/register` and `/login`

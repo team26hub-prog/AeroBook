@@ -9,6 +9,7 @@ use App\Core\Csrf;
 use App\Core\Session;
 use App\Models\Booking;
 use App\Models\FlightSearch;
+use PDOException;
 use RuntimeException;
 
 final class BookingController extends Controller
@@ -43,9 +44,10 @@ final class BookingController extends Controller
         $this->requireValidCsrf();$review=Session::get('booking_review');$flightId=(int)Session::get('selected_flight_id',0);
         if(!is_array($review)||!isset($review['flight_id'],$review['passengers'],$review['fare'],$review['currency'])||(int)$review['flight_id']!==$flightId||!is_array($review['passengers'])){Session::flash('errors',['Your booking review has expired. Please enter passenger details again.']);$this->redirect('/booking/passengers');}
         try{$booking=$this->bookings->createPending((int)Session::get('user_id',0),$flightId,$review['passengers'],(string)$review['fare'],(string)$review['currency']);}
+        catch(PDOException $e){error_log('Booking creation database error: '.$e->getMessage());Session::flash('errors',['We could not create the booking right now. Please try again.']);Session::flash('booking_passengers',$review['passengers']);$this->redirect('/booking/passengers');}
         catch(RuntimeException $e){Session::flash('errors',[$e->getMessage()]);Session::flash('booking_passengers',$review['passengers']);$this->redirect('/booking/passengers');}
         catch(\Throwable $e){error_log('Booking creation error: '.$e->getMessage());Session::flash('errors',['We could not create the booking. Please try again.']);Session::flash('booking_passengers',$review['passengers']);$this->redirect('/booking/passengers');}
-        Session::put('selected_flight_id',0);Session::put('booking_review',null);Session::put('booking_confirmation_id',$booking['id']);
+        Session::put('selected_flight_id',0);Session::put('booking_review',null);Session::put('booking_confirmation_id',$booking['id']);Session::flash('success','Booking created. Save your PNR and continue to seat selection.');
         $this->redirect('/booking/confirmation?id='.(int)$booking['id']);
     }
 
@@ -54,7 +56,7 @@ final class BookingController extends Controller
         $id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
         $booking=$id?$this->bookings->findForCustomer((int)$id,(int)Session::get('user_id',0)):null;
         if(!$booking)$this->redirect('/account?section=bookings');
-        $this->view('booking/confirmation',['title'=>'Booking created','activeSection'=>'bookings','userName'=>Auth::name(),'booking'=>$booking]);
+        $this->view('booking/confirmation',['title'=>'Booking created','activeSection'=>'bookings','userName'=>Auth::name(),'booking'=>$booking,'csrf'=>Csrf::token(),'success'=>Session::pullFlash('success'),'errors'=>Session::pullFlash('errors',[])]);
     }
 
     private function validatePassengers(mixed $input): array
@@ -64,8 +66,8 @@ final class BookingController extends Controller
         foreach(array_values($input) as $index=>$row){
             if(!is_array($row)){$errors[]='Passenger '.($index+1).' details are invalid.';continue;}
             $first=trim($this->scalar($row['first_name']??null));$last=trim($this->scalar($row['last_name']??null));$dob=$this->scalar($row['date_of_birth']??null);$gender=$this->scalar($row['gender']??'unspecified');$passport=trim($this->scalar($row['passport_number']??null));$country=strtoupper(trim($this->scalar($row['passport_country']??null)));
-            if($first===''||$this->length($first)>100)$errors[]='Enter a valid first name for passenger '.($index+1).'.';
-            if($last===''||$this->length($last)>100)$errors[]='Enter a valid last name for passenger '.($index+1).'.';
+            if($first===''||$this->length($first)>100||preg_match('/[\x00-\x1F\x7F]/u',$first))$errors[]='Enter a valid first name for passenger '.($index+1).'.';
+            if($last===''||$this->length($last)>100||preg_match('/[\x00-\x1F\x7F]/u',$last))$errors[]='Enter a valid last name for passenger '.($index+1).'.';
             $date=\DateTimeImmutable::createFromFormat('!Y-m-d',$dob);$dateErrors=\DateTimeImmutable::getLastErrors();
             if(!$date||($dateErrors!==false&&($dateErrors['warning_count']||$dateErrors['error_count']))||$date->format('Y-m-d')!==$dob||$dob>date('Y-m-d'))$errors[]='Enter a valid date of birth for passenger '.($index+1).'.';
             if(!in_array($gender,['female','male','other','unspecified'],true))$errors[]='Choose a valid gender for passenger '.($index+1).'.';

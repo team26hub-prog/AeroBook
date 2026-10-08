@@ -16,6 +16,10 @@ final class Session
         ini_set('session.use_trans_sid', '0');
         ini_set('session.cookie_httponly', '1');
         ini_set('session.cookie_samesite', 'Lax');
+        ini_set('session.cookie_lifetime', '0');
+        ini_set('session.sid_length', '48');
+        ini_set('session.sid_bits_per_character', '6');
+        session_cache_limiter('nocache');
 
         $appUrl = $GLOBALS['config']['app']['base_url'] ?? '';
         $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')

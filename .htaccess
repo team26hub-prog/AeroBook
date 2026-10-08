@@ -4,6 +4,7 @@ RewriteEngine On
 
 # Keep application source, configuration, database files, and local secrets private.
 RewriteRule ^(?:app|config|database)(?:/|$) - [F,L,NC]
+RewriteRule ^storage(?:/|$) - [F,L,NC]
 RewriteRule ^(?:\.git|\.agents|\.codex|\.aws)(?:/|$) - [F,L,NC]
 RewriteRule ^\.env(?:$|[./]) - [F,L,NC]
 

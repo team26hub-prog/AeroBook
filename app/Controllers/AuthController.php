@@ -23,13 +23,13 @@ final class AuthController extends Controller
     {
         $this->requireValidCsrf();
 
-        $fullName = trim((string) ($_POST['full_name'] ?? ''));
-        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
-        $password = (string) ($_POST['password'] ?? '');
-        $passwordConfirmation = (string) ($_POST['password_confirmation'] ?? '');
+        $fullName = trim($this->scalar($_POST['full_name'] ?? null));
+        $email = strtolower(trim($this->scalar($_POST['email'] ?? null)));
+        $password = $this->scalar($_POST['password'] ?? null);
+        $passwordConfirmation = $this->scalar($_POST['password_confirmation'] ?? null);
         $errors = [];
 
-        if ($fullName === '' || $this->characterLength($fullName) > 150) {
+        if ($fullName === '' || $this->characterLength($fullName) > 150 || preg_match('/[\x00-\x1F\x7F]/u', $fullName)) {
             $errors[] = 'Enter your name using no more than 150 characters.';
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
@@ -43,16 +43,16 @@ final class AuthController extends Controller
         }
 
         $users = new User();
-        if ($errors === [] && $users->findByEmail($email) !== null) {
-            $errors[] = 'An account with that email address already exists.';
-        }
-
         if ($errors !== []) {
             $this->storeFormErrors($errors, ['full_name' => $fullName, 'email' => $email]);
             $this->redirect('/register');
         }
 
         try {
+            if ($users->findByEmail($email) !== null) {
+                $this->storeFormErrors(['An account with that email address already exists.'], ['full_name' => $fullName, 'email' => $email]);
+                $this->redirect('/register');
+            }
             $user = $users->createCustomer($fullName, $email, password_hash($password, PASSWORD_DEFAULT));
         } catch (PDOException $exception) {
             if ($exception->getCode() !== '23000') {
@@ -77,10 +77,16 @@ final class AuthController extends Controller
     {
         $this->requireValidCsrf();
 
-        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
-        $password = (string) ($_POST['password'] ?? '');
+        $email = strtolower(trim($this->scalar($_POST['email'] ?? null)));
+        $password = $this->scalar($_POST['password'] ?? null);
+        if (strlen($email) > 254 || strlen($password) > 4096) {
+            $this->storeFormErrors(['Email or password is incorrect, or this account is unavailable.'], ['email' => substr($email, 0, 254)]);
+            $this->redirect('/login');
+        }
         if ((new AuthService())->authenticate($email, $password)) {
-            $this->redirect(Auth::role() === 'admin' ? '/admin' : '/account');
+            $isAdmin=Auth::role()==='admin';
+            Session::flash('success',$isAdmin?'Welcome to the admin panel.':'Welcome back to AeroBook.');
+            $this->redirect($isAdmin ? '/admin' : '/account');
         }
 
         $this->storeFormErrors(['Email or password is incorrect, or this account is unavailable.'], ['email' => $email]);
@@ -116,5 +122,10 @@ final class AuthController extends Controller
     {
         $count = preg_match_all('/./us', $value);
         return $count === false ? PHP_INT_MAX : $count;
+    }
+
+    private function scalar(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 }

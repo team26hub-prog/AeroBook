@@ -11,6 +11,7 @@ $escape = static fn (mixed $value): string => htmlspecialchars((string) $value, 
     <meta name="theme-color" content="#183251">
     <title><?= $escape($title) ?></title>
     <link rel="stylesheet" href="/assets/css/auth.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
 </head>
 <body>
 <header class="site-header">

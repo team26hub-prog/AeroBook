@@ -22,17 +22,18 @@ final class AccessController extends Controller
             'tickets'=>['E-Tickets','View and print e-tickets for confirmed bookings.'],
             'profile'=>['Profile / Account','Your account area is ready. Profile management will be added later.'],
         ];
-        $section=(string)($_GET['section']??'home');
+        $section=is_scalar($_GET['section']??null)?(string)$_GET['section']:'home';
         if(!isset($sections[$section]))$section='home';
         $bookings=[];
         $tickets=[];
+        $errors=[];
         if($section==='bookings'){
             try{$bookings=(new Booking())->listForCustomer((int)Session::get('user_id',0));}
-            catch(\Throwable $e){error_log('Customer booking list error: '.$e->getMessage());}
+            catch(\Throwable $e){error_log('Customer booking list error: '.$e->getMessage());$errors[]='Your bookings are temporarily unavailable. Please refresh and try again.';}
         }
         if($section==='tickets'){
             try{$tickets=(new ETicket())->forCustomer((int)Session::get('user_id',0));}
-            catch(\Throwable $e){error_log('Customer e-ticket list error: '.$e->getMessage());}
+            catch(\Throwable $e){error_log('Customer e-ticket list error: '.$e->getMessage());$errors[]='Your e-tickets are temporarily unavailable. Please refresh and try again.';}
         }
         $this->view('customer/home',[
             'title'=>$section==='home'?'Home':$sections[$section][0],
@@ -43,7 +44,7 @@ final class AccessController extends Controller
             'userName'=>Auth::name(),
             'csrf'=>Csrf::token(),
             'success'=>Session::pullFlash('success'),
-            'errors'=>Session::pullFlash('errors',[]),
+            'errors'=>array_merge($errors??[],Session::pullFlash('errors',[])),
             'bookings'=>$bookings,
             'tickets'=>$tickets,
         ]);

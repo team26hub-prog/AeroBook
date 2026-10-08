@@ -1,0 +1,50 @@
+/* Shared guardrails for narrow screens and touch input. */
+:root{--alert-blue:#597f97;--alert-ink:#183251;--alert-muted:#697985;--alert-border:#e3e9ee;--alert-danger:#a5464c}
+*,*::before,*::after{box-sizing:border-box}
+html{width:100%;overflow-x:clip;-webkit-text-size-adjust:100%}
+body{width:100%;min-width:320px;max-width:100%;overflow-x:clip}
+img,svg,video,canvas{max-width:100%;height:auto}
+input,select,textarea,button{max-width:100%;font:inherit}
+button,a,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+main,.admin-main,.customer-content,.admin-card,.customer-booking-card,.customer-placeholder,.payment-card,.flight-card{min-width:0;max-width:100%}
+.table-wrap{width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+.table-wrap table{min-width:620px}
+td,th,p,small,strong,a,label{overflow-wrap:break-word;word-break:normal}
+.alert,.admin-alert,.customer-notice{max-width:100%;overflow-wrap:anywhere}
+.swal2-container{padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))!important}
+.swal2-popup{width:min(32em,calc(100vw - 24px))!important;max-width:100%;border-radius:16px!important;font-size:1rem!important}
+.swal2-title{font-size:clamp(1.2rem,5vw,1.6rem)!important;overflow-wrap:anywhere}
+.swal2-html-container{overflow-wrap:anywhere;white-space:pre-line}
+.swal2-actions{width:100%;gap:10px}
+.swal2-actions button{min-height:46px;min-width:min(120px,40%);max-width:100%;margin:0!important;touch-action:manipulation}
+.swal2-styled.swal2-confirm{border:1px solid var(--alert-blue)!important;border-radius:8px!important;background:var(--alert-blue)!important;color:#fff!important;box-shadow:none!important}
+.swal2-styled.swal2-confirm:hover{border-color:var(--alert-ink)!important;background:var(--alert-ink)!important}
+.swal2-styled.swal2-cancel{border:1px solid var(--alert-border)!important;border-radius:8px!important;background:#edf3f6!important;color:var(--alert-ink)!important;box-shadow:none!important}
+.swal2-styled.swal2-cancel:hover{border-color:#c4d0d9!important;background:#dfe8ee!important}
+.swal2-styled.swal2-deny{border:1px solid var(--alert-danger)!important;border-radius:8px!important;background:var(--alert-danger)!important;color:#fff!important;box-shadow:none!important}
+.swal2-styled.swal2-deny:hover{border-color:#85383e!important;background:#85383e!important}
+.swal2-styled:focus-visible{outline:3px solid rgb(89 127 151 / 32%)!important;outline-offset:2px!important;box-shadow:none!important}
+.swal2-close:hover{color:var(--alert-blue)!important}
+.swal2-input:focus,.swal2-textarea:focus,.swal2-select:focus{border-color:var(--alert-blue)!important;box-shadow:0 0 0 3px rgb(89 127 151 / 17%)!important}
+.swal2-popup.aerobook-toast{width:min(440px,calc(100vw - 24px))!important;max-width:100%;padding:.9rem 1rem!important;border:1px solid var(--alert-border);border-radius:12px!important;box-shadow:0 12px 34px rgb(24 50 81 / 18%)!important;text-align:left}
+.swal2-popup.aerobook-toast .swal2-title{margin:.25rem 1.5rem .25rem 0;font-size:1rem!important;text-align:left}
+.swal2-popup.aerobook-toast .swal2-html-container{margin:.2rem 1.5rem .2rem 0;color:var(--alert-ink);font-size:.9rem;line-height:1.45;text-align:left}
+.swal2-popup.aerobook-toast .swal2-timer-progress-bar{background:var(--alert-blue)!important}
+.swal2-popup.aerobook-toast .swal2-close{color:var(--alert-muted);font-size:1.5rem}
+@media(max-width:600px){
+  .swal2-popup{padding:1.1em .9em!important}
+  .swal2-container.swal2-top-end,.swal2-container.swal2-top{inset:0 0 auto!important;justify-items:center;align-items:start;padding:max(8px,env(safe-area-inset-top)) 10px 10px!important}
+  .swal2-popup.aerobook-toast{width:calc(100vw - 20px)!important;margin:0 auto!important;padding:.8rem .9rem!important}
+  .swal2-popup.aerobook-toast .swal2-title{font-size:.95rem!important}
+  .swal2-popup.aerobook-toast .swal2-html-container{font-size:.86rem}
+  .swal2-actions{flex-wrap:wrap}
+  .swal2-actions button{flex:1 1 120px}
+  input,select,textarea,button{font-size:16px}
+  .table-wrap{border-radius:8px}
+}
+@media(max-width:360px){
+  .swal2-actions button{flex-basis:100%;width:100%}
+}
+
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid rgb(89 127 151 / 42%);outline-offset:2px}
+:where(.admin-button,.small-button,.booking-button,.seat-button,.payment-button,.customer-primary,.ticket-print-button):focus-visible{outline-color:rgb(24 50 81 / 45%)}

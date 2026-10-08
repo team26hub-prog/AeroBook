@@ -31,6 +31,7 @@ $GLOBALS['config'] = [
         'environment' => $env('APP_ENV', 'development'),
         'debug' => filter_var($env('APP_DEBUG', 'true'), FILTER_VALIDATE_BOOLEAN),
         'base_url' => rtrim((string) $env('APP_URL', 'http://localhost'), '/'),
+        'timezone' => $env('APP_TIMEZONE', 'Asia/Karachi'),
     ],
     'database' => [
         'host' => $env('DB_HOST', '127.0.0.1'),
@@ -40,5 +41,14 @@ $GLOBALS['config'] = [
         'port' => $env('DB_PORT', '3306'),
     ],
 ];
+
+try {
+    $timezone = (string) $GLOBALS['config']['app']['timezone'];
+    new \DateTimeZone($timezone);
+    date_default_timezone_set($timezone);
+} catch (\Throwable $exception) {
+    error_log('Invalid APP_TIMEZONE configured; using UTC.');
+    date_default_timezone_set('UTC');
+}
 
 \App\Core\Session::start();

@@ -16,7 +16,7 @@ final class CustomerFlightController extends Controller
 
     public function search(): void
     {
-        $errors=Session::pullFlash('errors',[]);$results=null;$departure=(string)($_GET['departure_id']??'');$arrival=(string)($_GET['arrival_id']??'');$date=(string)($_GET['date']??'');
+        $errors=Session::pullFlash('errors',[]);$results=null;$departure=is_scalar($_GET['departure_id']??null)?(string)$_GET['departure_id']:'';$arrival=is_scalar($_GET['arrival_id']??null)?(string)$_GET['arrival_id']:'';$date=is_scalar($_GET['date']??null)?(string)$_GET['date']:'';
         if($_GET!==[]){
             if(filter_var($departure,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])===false)$errors[]='Choose a departure airport.';
             if(filter_var($arrival,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])===false)$errors[]='Choose a destination airport.';
