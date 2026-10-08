@@ -4,6 +4,7 @@
     <h1 id="page-heading"><?= $escape($heading) ?></h1>
     <?php require BASE_PATH . '/app/Views/partials/alerts.php'; ?>
     <p class="intro"><?= $escape($message) ?></p>
+    <?php if (!empty($actionPath)): ?><p><a class="button" href="<?= $escape($actionPath) ?>"><?= $escape($actionLabel) ?></a></p><?php endif ?>
     <form method="post" action="<?= $escape($logoutPath) ?>">
         <input type="hidden" name="_csrf" value="<?= $escape($csrf) ?>">
         <button class="button button-secondary" type="submit">Sign out</button>

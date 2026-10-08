@@ -6,6 +6,7 @@ use App\Controllers\AccessController;
 use App\Controllers\AdminAuthController;
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
+use App\Controllers\CustomerFlightController;
 use App\Middleware\AuthMiddleware;
 
 define('BASE_PATH', dirname(__DIR__));
@@ -47,6 +48,15 @@ $router->post('/admin/logout', static function () use ($authMiddleware): mixed {
 
 $router->get('/account', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('customer', static fn () => (new AccessController())->customer());
+});
+$router->get('/flights', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new CustomerFlightController())->search());
+});
+$router->get('/flights/details', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new CustomerFlightController())->details());
+});
+$router->post('/flights/select', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new CustomerFlightController())->select());
 });
 $router->get('/admin', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('admin', static fn () => (new AdminController())->dashboard());
