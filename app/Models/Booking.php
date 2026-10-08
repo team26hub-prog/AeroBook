@@ -48,7 +48,39 @@ final class Booking extends Model
 
     public function listForCustomer(int $customerId): array
     {
-        $q=$this->db->prepare('SELECT b.id,b.pnr,b.status,b.currency,b.total_amount,b.booked_at,f.flight_number,f.departure_at,da.iata_code departure_code,aa.iata_code arrival_code,(SELECT COUNT(*) FROM passengers p WHERE p.booking_id=b.id) passenger_count FROM bookings b JOIN flights f ON f.id=b.flight_id JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id WHERE b.user_id=? ORDER BY b.created_at DESC');
-        $q->execute([$customerId]);return $q->fetchAll();
+        $q=$this->db->prepare("SELECT b.id,b.pnr,b.status,b.currency,b.total_amount,b.booked_at,f.flight_number,f.departure_at,f.arrival_at,al.name airline_name,
+            da.iata_code departure_code,da.city departure_city,aa.iata_code arrival_code,aa.city arrival_city,
+            (SELECT COUNT(*) FROM passengers p WHERE p.booking_id=b.id) passenger_count,
+            (SELECT py.status FROM payments py WHERE py.booking_id=b.id ORDER BY py.id DESC LIMIT 1) payment_status,
+            (b.status IN ('pending','confirmed') AND f.departure_at>NOW()) can_cancel
+            FROM bookings b JOIN flights f ON f.id=b.flight_id JOIN airlines al ON al.id=f.airline_id
+            JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id
+            WHERE b.user_id=? ORDER BY b.created_at DESC");
+        $q->execute([$customerId]);$bookings=$q->fetchAll();
+        if(!$bookings)return [];
+        $ids=array_map(static fn($booking)=>(int)$booking['id'],$bookings);$marks=implode(',',array_fill(0,count($ids),'?'));
+        $people=$this->db->prepare("SELECT p.booking_id,p.id,p.first_name,p.last_name,p.date_of_birth,p.gender,s.seat_number,t.ticket_number,t.status ticket_status
+            FROM passengers p LEFT JOIN booking_seats bs ON bs.booking_id=p.booking_id AND bs.passenger_id=p.id
+            LEFT JOIN seats s ON s.id=bs.seat_id LEFT JOIN e_tickets t ON t.booking_id=p.booking_id AND t.passenger_id=p.id
+            WHERE p.booking_id IN ({$marks}) ORDER BY p.booking_id,p.id");
+        $people->execute($ids);$byBooking=[];foreach($people->fetchAll() as $person){$bookingId=(int)$person['booking_id'];unset($person['booking_id']);$byBooking[$bookingId][]=$person;}
+        foreach($bookings as &$booking){$booking['passengers']=$byBooking[(int)$booking['id']]??[];}
+        unset($booking);return $bookings;
+    }
+
+    public function cancelForCustomer(int $bookingId,int $customerId): void
+    {
+        $this->db->beginTransaction();
+        try{
+            $q=$this->db->prepare('SELECT b.status,f.departure_at,(f.departure_at>NOW()) departure_is_future FROM bookings b JOIN flights f ON f.id=b.flight_id WHERE b.id=? AND b.user_id=? FOR UPDATE');
+            $q->execute([$bookingId,$customerId]);$booking=$q->fetch();
+            if(!$booking)throw new RuntimeException('Booking not found.');
+            if(!in_array($booking['status'],['pending','confirmed'],true)||(int)$booking['departure_is_future']!==1)throw new RuntimeException('This booking is no longer eligible for cancellation.');
+            $this->db->prepare('UPDATE bookings SET status="cancelled" WHERE id=?')->execute([$bookingId]);
+            $this->db->prepare('UPDATE e_tickets SET status="void" WHERE booking_id=? AND status="issued"')->execute([$bookingId]);
+            $this->db->prepare('UPDATE seats s JOIN booking_seats bs ON bs.seat_id=s.id SET s.status="available" WHERE bs.booking_id=?')->execute([$bookingId]);
+            $this->db->prepare('DELETE FROM booking_seats WHERE booking_id=?')->execute([$bookingId]);
+            $this->db->commit();
+        }catch(\Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
     }
 }

@@ -52,6 +52,9 @@ $router->post('/admin/logout', static function () use ($authMiddleware): mixed {
 $router->get('/account', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('customer', static fn () => (new AccessController())->customer());
 });
+$router->post('/bookings/cancel', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new AccessController())->cancelBooking());
+});
 $router->get('/flights', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('customer', static fn () => (new CustomerFlightController())->search());
 });

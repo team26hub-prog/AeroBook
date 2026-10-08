@@ -43,9 +43,22 @@ final class AccessController extends Controller
             'userName'=>Auth::name(),
             'csrf'=>Csrf::token(),
             'success'=>Session::pullFlash('success'),
+            'errors'=>Session::pullFlash('errors',[]),
             'bookings'=>$bookings,
             'tickets'=>$tickets,
         ]);
+    }
+
+    public function cancelBooking(): void
+    {
+        $this->requireValidCsrf();
+        $bookingId=filter_var($_POST['booking_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        if($bookingId===false){Session::flash('errors',['Choose a valid booking to cancel.']);$this->redirect('/account?section=bookings');}
+        try{(new Booking())->cancelForCustomer((int)$bookingId,(int)Session::get('user_id',0));Session::flash('success','Booking cancelled. Any issued e-tickets have been voided and the seats released.');}
+        catch(\PDOException $e){error_log('Customer booking cancellation database error: '.$e->getMessage());Session::flash('errors',['We could not cancel this booking. Please refresh and try again.']);}
+        catch(\RuntimeException $e){Session::flash('errors',[$e->getMessage()]);}
+        catch(\Throwable $e){error_log('Customer booking cancellation error: '.$e->getMessage());Session::flash('errors',['We could not cancel this booking. Please try again.']);}
+        $this->redirect('/account?section=bookings');
     }
 
     public function admin(): void
