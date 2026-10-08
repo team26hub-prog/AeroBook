@@ -79,8 +79,8 @@ final class AuthController extends Controller
 
         $email = strtolower(trim((string) ($_POST['email'] ?? '')));
         $password = (string) ($_POST['password'] ?? '');
-        if ((new AuthService())->authenticate($email, $password, 'customer')) {
-            $this->redirect('/account');
+        if ((new AuthService())->authenticate($email, $password)) {
+            $this->redirect(Auth::role() === 'admin' ? '/admin' : '/account');
         }
 
         $this->storeFormErrors(['Email or password is incorrect, or this account is unavailable.'], ['email' => $email]);

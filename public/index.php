@@ -4,6 +4,7 @@ declare(strict_types=1);
 use App\Core\Router;
 use App\Controllers\AccessController;
 use App\Controllers\AdminAuthController;
+use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Middleware\AuthMiddleware;
 
@@ -36,17 +37,37 @@ $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
 $router->post('/logout', [AuthController::class, 'logout']);
 
-$router->get('/admin/login', [AdminAuthController::class, 'showLogin']);
-$router->post('/admin/login', [AdminAuthController::class, 'login']);
-$router->post('/admin/logout', [AdminAuthController::class, 'logout']);
+$router->get('/admin/login', static function (): void {
+    header('Location: /login', true, 303);
+});
+$router->post('/admin/login', [AuthController::class, 'login']);
+$router->post('/admin/logout', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('admin', static fn () => (new AdminAuthController())->logout());
+});
 
-$router->get('/account', static fn () => $authMiddleware->handle(
-    'customer',
-    static fn () => (new AccessController())->customer()
-));
-$router->get('/admin', static fn () => $authMiddleware->handle(
-    'admin',
-    static fn () => (new AccessController())->admin()
-));
+$router->get('/account', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new AccessController())->customer());
+});
+$router->get('/admin', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('admin', static fn () => (new AdminController())->dashboard());
+});
+$adminPages = [
+    '/admin/airlines' => 'airlines', '/admin/airports' => 'airports', '/admin/flights' => 'flights',
+    '/admin/seats' => 'seats', '/admin/bookings' => 'bookings', '/admin/payments' => 'payments',
+];
+foreach ($adminPages as $path => $method) {
+    $router->get($path, static function () use ($authMiddleware, $method): mixed {
+        return $authMiddleware->handle('admin', static function () use ($method): void {
+            $controller = new AdminController();
+            $controller->{$method}();
+        });
+    });
+}
+$router->post('/admin/action', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('admin', static fn () => (new AdminController())->save());
+});
+$router->get('/admin/payment-proof', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('admin', static fn () => (new AdminController())->proof());
+});
 
 $router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');

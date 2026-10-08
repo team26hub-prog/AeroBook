@@ -11,11 +11,10 @@ final class AuthService
     {
     }
 
-    public function authenticate(string $email, string $password, string $requiredRole): bool
+    public function authenticate(string $email, string $password): bool
     {
         $user = $this->users->findByEmail(strtolower(trim($email)));
         if ($user === null
-            || $user['role'] !== $requiredRole
             || $user['status'] !== 'active'
             || !password_verify($password, $user['password_hash'])) {
             return false;

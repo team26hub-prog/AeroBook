@@ -20,7 +20,7 @@ The front controller loads environment configuration from `.env`. Point the web 
 ## Authentication
 
 - Customer registration and sign-in: `/register` and `/login`
-- Administrator sign-in: `/admin/login`
+- Sign-in for all accounts: `/login` (admins go to `/admin`, customers go to `/account`)
 - Sign-out is submitted as a CSRF-protected POST form.
 - Customer and admin access is protected by role middleware, which also checks that the account is still active.
 

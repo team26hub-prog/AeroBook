@@ -1,8 +1,8 @@
 <?php require BASE_PATH . '/app/Views/layouts/header.php'; ?>
 <section class="auth-card" aria-labelledby="page-heading">
-    <p class="eyebrow">Customer account</p>
+    <p class="eyebrow">AeroBook account</p>
     <h1 id="page-heading">Sign in to AeroBook</h1>
-    <p class="intro">Welcome back. Enter your account details to continue.</p>
+    <p class="intro">Welcome back. Sign in to continue to your account.</p>
     <?php require BASE_PATH . '/app/Views/partials/alerts.php'; ?>
     <form method="post" action="/login" class="auth-form">
         <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">

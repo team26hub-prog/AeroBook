@@ -12,14 +12,14 @@ final class AuthMiddleware
     public function handle(string $requiredRole, callable $next): mixed
     {
         if (!Auth::check()) {
-            header('Location: ' . ($requiredRole === 'admin' ? '/admin/login' : '/login'), true, 303);
+            header('Location: /login', true, 303);
             return null;
         }
 
         $user = (new User())->findIdentityById((int) Session::get('user_id'));
         if ($user === null || $user['status'] !== 'active' || $user['role'] !== Auth::role()) {
             Auth::logout();
-            header('Location: ' . ($requiredRole === 'admin' ? '/admin/login' : '/login'), true, 303);
+            header('Location: /login', true, 303);
             return null;
         }
 
