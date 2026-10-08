@@ -19,7 +19,7 @@ require BASE_PATH.'/app/Views/layouts/header.php';
             <button class="customer-sidebar-close" type="button" aria-label="Close customer navigation">Close</button>
             <nav>
                 <?php foreach($customerNav as $key=>$label): ?>
-                    <a class="<?= $activeSection===$key?'active':'' ?>" href="<?= $key==='home'?'/account':($key==='search'?'/flights':'/account?section='.$key) ?>"><span><?= $customerEscape($label) ?></span><?php if($key==='search'): ?><b>Find a trip</b><?php endif ?></a>
+                    <a class="<?= $activeSection===$key?'active':'' ?>" href="<?= $key==='home'?'/account':($key==='search'?'/flights':($key==='seats'?'/seat-selection':'/account?section='.$key)) ?>"><span><?= $customerEscape($label) ?></span><?php if($key==='search'): ?><b>Find a trip</b><?php endif ?></a>
                 <?php endforeach ?>
             </nav>
             <form class="customer-signout" method="post" action="/logout"><input type="hidden" name="_csrf" value="<?= $customerEscape($csrf) ?>"><button type="submit">Sign out</button></form>

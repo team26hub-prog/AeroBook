@@ -122,15 +122,18 @@ CREATE TABLE booking_seats (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   booking_id BIGINT UNSIGNED NOT NULL,
   seat_id BIGINT UNSIGNED NOT NULL,
+  passenger_id BIGINT UNSIGNED NULL,
   status ENUM('reserved', 'confirmed') NOT NULL DEFAULT 'reserved',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_booking_seats_seat (seat_id),
   UNIQUE KEY uq_booking_seats_booking_seat (booking_id, seat_id),
+  UNIQUE KEY uq_booking_seats_passenger (booking_id, passenger_id),
   KEY idx_booking_seats_booking_status (booking_id, status),
   CONSTRAINT fk_booking_seats_booking FOREIGN KEY (booking_id) REFERENCES bookings (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT fk_booking_seats_seat FOREIGN KEY (seat_id) REFERENCES seats (id) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT fk_booking_seats_seat FOREIGN KEY (seat_id) REFERENCES seats (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_booking_seats_passenger FOREIGN KEY (booking_id, passenger_id) REFERENCES passengers (booking_id, id) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE payments (
