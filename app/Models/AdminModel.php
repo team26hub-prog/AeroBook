@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Core\Model;
-use PDO;
 use RuntimeException;
 
 final class AdminModel extends Model
@@ -87,14 +86,25 @@ final class AdminModel extends Model
     {
         if(!in_array($decision,['verified','rejected'],true))throw new RuntimeException('Invalid payment decision.');
         $this->db->beginTransaction();try{
-            $q=$this->db->prepare('SELECT p.*,b.status booking_status,b.total_amount booking_amount,b.currency booking_currency FROM payments p JOIN bookings b ON b.id=p.booking_id WHERE p.id=? FOR UPDATE');$q->execute([$id]);$p=$q->fetch();if(!$p)throw new RuntimeException('Payment not found.');if(!in_array($p['status'],['pending','submitted'],true))throw new RuntimeException('This payment has already been reviewed.');
+            $q=$this->db->prepare('SELECT p.*,b.status booking_status,b.flight_id booking_flight_id,b.total_amount booking_amount,b.currency booking_currency FROM payments p JOIN bookings b ON b.id=p.booking_id WHERE p.id=? FOR UPDATE');$q->execute([$id]);$p=$q->fetch();if(!$p)throw new RuntimeException('Payment not found.');if(!in_array($p['status'],['pending','submitted'],true))throw new RuntimeException('This payment has already been reviewed.');
             $this->db->prepare('UPDATE payments SET status=?,paid_at=IF(?="verified",COALESCE(paid_at,NOW()),paid_at) WHERE id=?')->execute([$decision,$decision,$id]);
             if($decision==='verified'){
                 if($p['booking_status']==='cancelled'||$p['booking_status']==='expired')throw new RuntimeException('A cancelled or expired booking cannot be confirmed.');
                 if(number_format((float)$p['amount'],2,'.','')!==number_format((float)$p['booking_amount'],2,'.','')||$p['currency']!==$p['booking_currency'])throw new RuntimeException('Payment amount or currency does not match the booking.');
                 $duplicate=$this->db->prepare('SELECT id FROM payments WHERE booking_id=? AND status="verified" AND id<>? LIMIT 1');$duplicate->execute([$p['booking_id'],$id]);if($duplicate->fetch())throw new RuntimeException('Another payment is already verified for this booking.');
+                $passengers=$this->db->prepare('SELECT p.id,bs.seat_id,s.flight_id seat_flight_id FROM passengers p LEFT JOIN booking_seats bs ON bs.booking_id=p.booking_id AND bs.passenger_id=p.id LEFT JOIN seats s ON s.id=bs.seat_id WHERE p.booking_id=? ORDER BY p.id FOR UPDATE');$passengers->execute([$p['booking_id']]);$passengerRows=$passengers->fetchAll();
+                if(!$passengerRows)throw new RuntimeException('The booking has no passengers and cannot be ticketed.');
+                foreach($passengerRows as $passenger)if($passenger['seat_id']===null||(int)$passenger['seat_flight_id']!==(int)$p['booking_flight_id'])throw new RuntimeException('Assign a valid seat to every passenger before verifying this payment.');
                 $this->db->prepare('UPDATE bookings SET status="confirmed" WHERE id=?')->execute([$p['booking_id']]);$this->db->prepare('UPDATE booking_seats SET status="confirmed" WHERE booking_id=?')->execute([$p['booking_id']]);
-                $ps=$this->db->prepare('SELECT id FROM passengers WHERE booking_id=?');$ps->execute([$p['booking_id']]);$ins=$this->db->prepare('INSERT IGNORE INTO e_tickets(booking_id,passenger_id,ticket_number,status) VALUES(?,?,?,"issued")');foreach($ps->fetchAll(PDO::FETCH_COLUMN) as $pid)$ins->execute([$p['booking_id'],$pid,strtoupper(bin2hex(random_bytes(10)))]);
+                $existingTicket=$this->db->prepare('SELECT id FROM e_tickets WHERE passenger_id=? LIMIT 1');$ticketInsert=$this->db->prepare('INSERT INTO e_tickets(booking_id,passenger_id,ticket_number,status) VALUES(?,?,?,"issued")');
+                foreach($passengerRows as $passenger){
+                    $existingTicket->execute([$passenger['id']]);if($existingTicket->fetch())continue;
+                    $created=false;for($attempt=0;$attempt<5&&!$created;$attempt++){
+                        try{$ticketInsert->execute([$p['booking_id'],$passenger['id'],strtoupper(bin2hex(random_bytes(10)))]);$created=true;}
+                        catch(\PDOException $e){if((int)($e->errorInfo[1]??0)!==1062||$attempt===4)throw $e;}
+                    }
+                    if(!$created)throw new RuntimeException('Could not create a unique e-ticket number. Please retry verification.');
+                }
             }
             $this->db->commit();
         }catch(\Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}

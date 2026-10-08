@@ -9,6 +9,7 @@ use App\Controllers\AuthController;
 use App\Controllers\CustomerFlightController;
 use App\Controllers\BookingController;
 use App\Controllers\SeatSelectionController;
+use App\Controllers\ManualPaymentController;
 use App\Middleware\AuthMiddleware;
 
 define('BASE_PATH', dirname(__DIR__));
@@ -77,6 +78,12 @@ $router->get('/seat-selection', static function () use ($authMiddleware): mixed 
 });
 $router->post('/seat-selection/save', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('customer', static fn () => (new SeatSelectionController())->save());
+});
+$router->get('/payments', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new ManualPaymentController())->index());
+});
+$router->post('/payments/submit', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new ManualPaymentController())->submit());
 });
 $router->get('/admin', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('admin', static fn () => (new AdminController())->dashboard());

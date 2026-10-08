@@ -41,7 +41,7 @@ final class AdminController extends Controller
             elseif($kind==='payment')$this->model->reviewPayment((int)($_POST['id']??0),(string)($_POST['decision']??''));
             else throw new RuntimeException('Unknown admin action.');
             Session::flash('success','Changes saved successfully.');
-        }catch(\Throwable $e){error_log('Admin action error: '.$e->getMessage());Session::flash('errors',[$e instanceof RuntimeException?$e->getMessage():'Could not save changes. Check for duplicate codes or invalid linked records.']);}
+        }catch(\Throwable $e){error_log('Admin action error: '.$e->getMessage());Session::flash('errors',[($e instanceof RuntimeException&&!($e instanceof \PDOException))?$e->getMessage():'Could not save changes. Check the details and try again.']);}
         $back=(string)($_POST['return_to']??'/admin');if(!in_array($back,['/admin','/admin/airlines','/admin/airports','/admin/flights','/admin/seats','/admin/bookings','/admin/payments'],true))$back='/admin';$this->redirect($back);
     }
 

@@ -26,7 +26,7 @@ require BASE_PATH.'/app/Views/layouts/customer-start.php';
             </div></div><?php endif ?>
             <p class="seat-map-help" id="seat-map-help" aria-live="polite">Choose a passenger above, then tap an available seat.</p>
         </section>
-        <div class="seat-actions"><a href="/account?section=bookings">My bookings</a><button class="seat-button" type="submit">Save seat selection</button></div>
+        <div class="seat-actions"><a href="/account?section=bookings">My bookings</a><button class="seat-button" type="submit">Save seat selection</button><?php if($assignedCount===count($passengers)): ?><a class="seat-button" href="/payments?booking_id=<?= (int)$booking['id'] ?>">Continue to payment</a><?php endif ?></div>
     </form>
 </div>
 <script>
