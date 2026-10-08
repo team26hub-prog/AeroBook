@@ -45,7 +45,7 @@ final class CustomerFlightController extends Controller
         try{$flight=$this->flights->findAvailable((int)$id);}catch(\Throwable $e){error_log('Flight selection error: '.$e->getMessage());$flight=null;}
         if($flight===null){Session::flash('errors',['This flight is no longer available. Search again to see current options.']);$this->redirect('/flights');}
         Session::put('selected_flight_id',(int)$flight['id']);
-        Session::flash('success','Flight selected. It is ready for the next step. No booking has been created.');
-        $this->redirect('/flights/details?id='.(int)$flight['id']);
+        Session::put('booking_review',null);Session::pullFlash('booking_passengers',[]);
+        $this->redirect('/booking/passengers');
     }
 }

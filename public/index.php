@@ -7,6 +7,7 @@ use App\Controllers\AdminAuthController;
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\CustomerFlightController;
+use App\Controllers\BookingController;
 use App\Middleware\AuthMiddleware;
 
 define('BASE_PATH', dirname(__DIR__));
@@ -57,6 +58,18 @@ $router->get('/flights/details', static function () use ($authMiddleware): mixed
 });
 $router->post('/flights/select', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('customer', static fn () => (new CustomerFlightController())->select());
+});
+$router->get('/booking/passengers', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new BookingController())->passengers());
+});
+$router->post('/booking/review', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new BookingController())->review());
+});
+$router->post('/booking/create', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new BookingController())->create());
+});
+$router->get('/booking/confirmation', static function () use ($authMiddleware): mixed {
+    return $authMiddleware->handle('customer', static fn () => (new BookingController())->confirmation());
 });
 $router->get('/admin', static function () use ($authMiddleware): mixed {
     return $authMiddleware->handle('admin', static fn () => (new AdminController())->dashboard());
