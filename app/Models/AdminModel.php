@@ -15,7 +15,7 @@ final class AdminModel extends Model
             $counts[$table] = (int) $this->db->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
         }
         $counts['pending_payments'] = (int) $this->db->query("SELECT COUNT(*) FROM payments WHERE status IN ('pending','submitted')")->fetchColumn();
-        $counts['revenue'] = (string) $this->db->query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status='verified'")->fetchColumn();
+        $counts['revenue'] = (string) $this->db->query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status='verified' AND currency='PKR'")->fetchColumn();
         $counts['recent_bookings'] = $this->db->query('SELECT b.id,b.pnr,b.status,b.total_amount,b.currency,b.booked_at,u.full_name,f.flight_number FROM bookings b JOIN users u ON u.id=b.user_id JOIN flights f ON f.id=b.flight_id ORDER BY b.created_at DESC LIMIT 8')->fetchAll();
         return $counts;
     }
@@ -26,7 +26,7 @@ final class AdminModel extends Model
             'airlines' => $this->db->query('SELECT * FROM airlines ORDER BY name')->fetchAll(),
             'airports' => $this->db->query('SELECT * FROM airports ORDER BY city,name')->fetchAll(),
             'flights' => $this->db->query('SELECT f.*,al.name airline,da.iata_code departure,aa.iata_code arrival,(SELECT COUNT(*) FROM seats s WHERE s.flight_id=f.id) capacity,(SELECT COUNT(*) FROM booking_seats bs JOIN seats s ON s.id=bs.seat_id WHERE s.flight_id=f.id) reserved FROM flights f JOIN airlines al ON al.id=f.airline_id JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id ORDER BY f.departure_at DESC')->fetchAll(),
-            'seats' => $this->db->query('SELECT f.id flight_id,f.flight_number,f.departure_at,da.iata_code departure,aa.iata_code arrival,COUNT(s.id) capacity,SUM(s.status="available") available,SUM(s.status="blocked") blocked FROM flights f JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id LEFT JOIN seats s ON s.flight_id=f.id GROUP BY f.id ORDER BY f.departure_at DESC')->fetchAll(),
+            'seats' => $this->db->query('SELECT f.id flight_id,f.flight_number,f.departure_at,da.iata_code departure,aa.iata_code arrival,COUNT(s.id) capacity,COALESCE(SUM(s.status="available" AND NOT EXISTS(SELECT 1 FROM booking_seats bs WHERE bs.seat_id=s.id)),0) available,COALESCE(SUM(s.status="blocked"),0) blocked FROM flights f JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id LEFT JOIN seats s ON s.flight_id=f.id GROUP BY f.id ORDER BY f.departure_at DESC')->fetchAll(),
             'bookings' => $this->db->query('SELECT b.*,u.full_name,u.email,f.flight_number,da.iata_code departure,aa.iata_code arrival,(SELECT GROUP_CONCAT(CONCAT(p.first_name," ",p.last_name," · ",p.gender," · DOB ",p.date_of_birth,IF(p.passport_number IS NULL,"",CONCAT(" · Passport ",p.passport_number))) SEPARATOR " | ") FROM passengers p WHERE p.booking_id=b.id) passengers FROM bookings b JOIN users u ON u.id=b.user_id JOIN flights f ON f.id=b.flight_id JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id ORDER BY b.created_at DESC')->fetchAll(),
             'payments' => $this->db->query('SELECT p.*,b.pnr,b.status booking_status,u.full_name,u.email FROM payments p JOIN bookings b ON b.id=p.booking_id JOIN users u ON u.id=b.user_id ORDER BY p.created_at DESC')->fetchAll(),
             default => [],
@@ -49,7 +49,9 @@ final class AdminModel extends Model
         if ($kind === 'airports') {
             $iata=strtoupper($this->required($v,'iata_code',3));$icao=$this->optional($v,'icao_code',4);
             if(!preg_match('/^[A-Z]{3}$/',$iata)||($icao!==null&&!preg_match('/^[A-Z]{4}$/',strtoupper($icao))))throw new RuntimeException('Enter a valid three-letter IATA and optional four-letter ICAO code.');
-            $data=[$this->required($v,'name',180),$iata,$icao===null?null:strtoupper($icao),$this->required($v,'city',120),$this->required($v,'country',120),$this->required($v,'timezone',64),$this->enum($v,'status',['active','inactive'])];
+            $timezone=$this->required($v,'timezone',64);
+            try { new \DateTimeZone($timezone); } catch (\Exception $e) { throw new RuntimeException('Enter a valid airport timezone.'); }
+            $data=[$this->required($v,'name',180),$iata,$icao===null?null:strtoupper($icao),$this->required($v,'city',120),$this->required($v,'country',120),$timezone,$this->enum($v,'status',['active','inactive'])];
             $this->upsert($v,'airports',['name','iata_code','icao_code','city','country','timezone','status'],$data); return;
         }
         if ($kind === 'flights') {
@@ -72,7 +74,7 @@ final class AdminModel extends Model
 
     public function generateSeats(int $flight,int $rows,array $letters,string $cabin): int
     {
-        if($flight<1||$rows<1||$rows>100||!$letters||count($letters)>10||!in_array($cabin,['economy','premium_economy','business','first'],true)) throw new RuntimeException('Provide a flight, 1–100 rows, seat letters, and a valid cabin.');
+        if($flight<1||$rows<1||$rows>100||!$letters||count($letters)>11||!in_array($cabin,['economy','premium_economy','business','first'],true)) throw new RuntimeException('Provide a flight, 1–100 rows, seat letters, and a valid cabin.');
         foreach($letters as $letter)if(!is_string($letter)||!preg_match('/^[A-Ka-k]$/',$letter))throw new RuntimeException('Choose valid seat letters.');
         $letters=array_values(array_unique(array_map('strtoupper',$letters))); if(!$letters) throw new RuntimeException('Select at least one valid seat letter.');
         $this->db->beginTransaction(); try { $q=$this->db->prepare('SELECT id FROM flights WHERE id=? FOR UPDATE');$q->execute([$flight]);if(!$q->fetch())throw new RuntimeException('Flight not found.');$ins=$this->db->prepare('INSERT IGNORE INTO seats(flight_id,seat_number,cabin_class,status) VALUES(?,?,?,"available")');$n=0;for($r=1;$r<=$rows;$r++)foreach($letters as $letter){$ins->execute([$flight,$r.$letter,$cabin]);$n+=$ins->rowCount();}$this->db->commit();return $n;}catch(\Throwable $e){$this->db->rollBack();throw $e;}
@@ -110,15 +112,16 @@ final class AdminModel extends Model
     {
         if(!in_array($decision,['verified','rejected'],true))throw new RuntimeException('Invalid payment decision.');
         $this->db->beginTransaction();try{
-            $q=$this->db->prepare('SELECT p.*,b.status booking_status,b.flight_id booking_flight_id,b.total_amount booking_amount,b.currency booking_currency FROM payments p JOIN bookings b ON b.id=p.booking_id WHERE p.id=? FOR UPDATE');$q->execute([$id]);$p=$q->fetch();if(!$p)throw new RuntimeException('Payment not found.');if(!in_array($p['status'],['pending','submitted'],true))throw new RuntimeException('This payment has already been reviewed.');
+            $q=$this->db->prepare('SELECT p.*,b.status booking_status,b.flight_id booking_flight_id,b.total_amount booking_amount,b.currency booking_currency,f.status flight_status,f.departure_at FROM payments p JOIN bookings b ON b.id=p.booking_id JOIN flights f ON f.id=b.flight_id WHERE p.id=? FOR UPDATE');$q->execute([$id]);$p=$q->fetch();if(!$p)throw new RuntimeException('Payment not found.');if(!in_array($p['status'],['pending','submitted'],true))throw new RuntimeException('This payment has already been reviewed.');
             $this->db->prepare('UPDATE payments SET status=?,paid_at=IF(?="verified",COALESCE(paid_at,NOW()),paid_at) WHERE id=?')->execute([$decision,$decision,$id]);
             if($decision==='verified'){
                 if($p['booking_status']!=='pending')throw new RuntimeException('Only a pending booking can be confirmed by payment verification.');
+                if(!in_array($p['flight_status'],['scheduled','boarding'],true)||strtotime($p['departure_at'])<=time())throw new RuntimeException('This flight is no longer available for payment verification.');
                 if(number_format((float)$p['amount'],2,'.','')!==number_format((float)$p['booking_amount'],2,'.','')||$p['currency']!==$p['booking_currency'])throw new RuntimeException('Payment amount or currency does not match the booking.');
                 $duplicate=$this->db->prepare('SELECT id FROM payments WHERE booking_id=? AND status="verified" AND id<>? LIMIT 1');$duplicate->execute([$p['booking_id'],$id]);if($duplicate->fetch())throw new RuntimeException('Another payment is already verified for this booking.');
-                $passengers=$this->db->prepare('SELECT p.id,bs.seat_id,s.flight_id seat_flight_id FROM passengers p LEFT JOIN booking_seats bs ON bs.booking_id=p.booking_id AND bs.passenger_id=p.id LEFT JOIN seats s ON s.id=bs.seat_id WHERE p.booking_id=? ORDER BY p.id FOR UPDATE');$passengers->execute([$p['booking_id']]);$passengerRows=$passengers->fetchAll();
+                $passengers=$this->db->prepare('SELECT p.id,bs.seat_id,s.flight_id seat_flight_id,s.status seat_status FROM passengers p LEFT JOIN booking_seats bs ON bs.booking_id=p.booking_id AND bs.passenger_id=p.id LEFT JOIN seats s ON s.id=bs.seat_id WHERE p.booking_id=? ORDER BY p.id FOR UPDATE');$passengers->execute([$p['booking_id']]);$passengerRows=$passengers->fetchAll();
                 if(!$passengerRows)throw new RuntimeException('The booking has no passengers and cannot be ticketed.');
-                foreach($passengerRows as $passenger)if($passenger['seat_id']===null||(int)$passenger['seat_flight_id']!==(int)$p['booking_flight_id'])throw new RuntimeException('Assign a valid seat to every passenger before verifying this payment.');
+                foreach($passengerRows as $passenger)if($passenger['seat_id']===null||(int)$passenger['seat_flight_id']!==(int)$p['booking_flight_id']||$passenger['seat_status']!=='available')throw new RuntimeException('Assign a valid seat to every passenger before verifying this payment.');
                 $this->db->prepare('UPDATE bookings SET status="confirmed" WHERE id=?')->execute([$p['booking_id']]);$this->db->prepare('UPDATE booking_seats SET status="confirmed" WHERE booking_id=?')->execute([$p['booking_id']]);
                 $existingTicket=$this->db->prepare('SELECT id FROM e_tickets WHERE passenger_id=? LIMIT 1');$ticketInsert=$this->db->prepare('INSERT INTO e_tickets(booking_id,passenger_id,ticket_number,status) VALUES(?,?,?,"issued")');
                 foreach($passengerRows as $passenger){

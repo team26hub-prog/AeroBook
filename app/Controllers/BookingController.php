@@ -20,8 +20,9 @@ final class BookingController extends Controller
 
     public function passengers(): void
     {
-        $flightId=(int)Session::get('selected_flight_id',0);try{$flight=$flightId?$this->flights->findAvailable($flightId):null;}catch(\Throwable $e){error_log('Selected flight check failed: '.$e->getMessage());$flight=null;}
+        $flightId=(int)Session::get('selected_flight_id',0);try{$flight=$flightId?$this->flights->findUpcoming($flightId):null;}catch(\Throwable $e){error_log('Selected flight check failed: '.$e->getMessage());$flight=null;}
         if(!$flight){Session::flash('errors',['Select an available flight before entering passenger details.']);$this->redirect('/flights');}
+        if((int)$flight['available_seats']<1){$this->flashSeatAvailabilityAlert();$this->redirect('/flights');}
         $old=Session::pullFlash('booking_passengers',[]);if(!$old){$review=Session::get('booking_review');if(is_array($review)&&is_array($review['passengers']??null))$old=$review['passengers'];}
         $this->view('booking/passengers',['title'=>'Passenger details','activeSection'=>'search','userName'=>Auth::name(),'csrf'=>Csrf::token(),'flight'=>$flight,'errors'=>Session::pullFlash('errors',[]),'old'=>$old]);
     }
@@ -30,9 +31,9 @@ final class BookingController extends Controller
     {
         $this->requireValidCsrf();$flightId=(int)Session::get('selected_flight_id',0);$passengers=$this->validatePassengers($_POST['passengers']??null);
         if($passengers['errors']){Session::flash('errors',$passengers['errors']);Session::flash('booking_passengers',$passengers['data']);$this->redirect('/booking/passengers');}
-        try{$flight=$flightId?$this->flights->findAvailable($flightId):null;}catch(\Throwable $e){error_log('Booking review flight check failed: '.$e->getMessage());$flight=null;}
+        try{$flight=$flightId?$this->flights->findUpcoming($flightId):null;}catch(\Throwable $e){error_log('Booking review flight check failed: '.$e->getMessage());$flight=null;}
         if(!$flight){Session::flash('errors',['Your selected flight is no longer available. Search for another flight.']);$this->redirect('/flights');}
-        if((int)$flight['available_seats']<count($passengers['data'])){Session::flash('errors',['There are not enough available seats for the passenger count.']);Session::flash('booking_passengers',$passengers['data']);$this->redirect('/booking/passengers');}
+        if((int)$flight['available_seats']<count($passengers['data'])){$this->flashSeatAvailabilityAlert((int)$flight['available_seats']);Session::flash('booking_passengers',$passengers['data']);$this->redirect((int)$flight['available_seats']<1?'/flights':'/booking/passengers');}
         $fareCents=(int)round((float)$flight['base_fare']*100);$totalCents=$fareCents*count($passengers['data']);
         if($totalCents>9999999999){Session::flash('errors',['The total amount exceeds the booking limit.']);Session::flash('booking_passengers',$passengers['data']);$this->redirect('/booking/passengers');}
         Session::put('booking_review',['flight_id'=>$flightId,'passengers'=>$passengers['data'],'fare'=>$flight['base_fare'],'currency'=>$flight['currency']]);
@@ -45,6 +46,7 @@ final class BookingController extends Controller
         if(!is_array($review)||!isset($review['flight_id'],$review['passengers'],$review['fare'],$review['currency'])||(int)$review['flight_id']!==$flightId||!is_array($review['passengers'])){Session::flash('errors',['Your booking review has expired. Please enter passenger details again.']);$this->redirect('/booking/passengers');}
         try{$booking=$this->bookings->createPending((int)Session::get('user_id',0),$flightId,$review['passengers'],(string)$review['fare'],(string)$review['currency']);}
         catch(PDOException $e){error_log('Booking creation database error: '.$e->getMessage());Session::flash('errors',['We could not create the booking right now. Please try again.']);Session::flash('booking_passengers',$review['passengers']);$this->redirect('/booking/passengers');}
+        catch(\App\Core\InsufficientSeats $e){$this->flashSeatAvailabilityAlert($e->availableSeats);Session::flash('booking_passengers',$review['passengers']);$this->redirect($e->availableSeats<1?'/flights':'/booking/passengers');}
         catch(RuntimeException $e){Session::flash('errors',[$e->getMessage()]);Session::flash('booking_passengers',$review['passengers']);$this->redirect('/booking/passengers');}
         catch(\Throwable $e){error_log('Booking creation error: '.$e->getMessage());Session::flash('errors',['We could not create the booking. Please try again.']);Session::flash('booking_passengers',$review['passengers']);$this->redirect('/booking/passengers');}
         Session::put('selected_flight_id',0);Session::put('booking_review',null);Session::put('booking_confirmation_id',$booking['id']);Session::flash('success','Booking created. Save your PNR and continue to seat selection.');

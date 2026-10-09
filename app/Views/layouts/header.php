@@ -12,10 +12,15 @@ $escape = static fn (mixed $value): string => htmlspecialchars((string) $value, 
     <title><?= $escape($title) ?></title>
     <link rel="stylesheet" href="/assets/css/auth.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
+    <link rel="stylesheet" href="/assets/css/branding.css">
+    <link rel="stylesheet" href="/assets/css/mobile-navigation.css">
+    <link rel="stylesheet" href="/assets/css/back-navigation.css">
+    <script defer src="/assets/js/back-navigation.js"></script>
 </head>
-<body>
-<header class="site-header">
-    <a class="brand" href="/login" aria-label="AeroBook home">AeroBook</a>
+<body data-back-role="<?= $escape(\App\Core\Auth::role()??'guest') ?>" data-back-user="<?= $escape(\App\Core\Session::get('user_id',0)) ?>" data-back-booking-active="<?= (int)\App\Core\Session::get('selected_flight_id',0)>0?'1':'0' ?>" data-back-method="<?= $escape($_SERVER['REQUEST_METHOD']??'GET') ?>">
+<header class="site-header<?= !empty($authPage)?' auth-topbar':'' ?>">
+    <a class="brand" href="/" aria-label="AeroBook home"><?php if(!empty($authPage)): ?><span class="sidebar-logo auth-logo"><img src="/assets/images/aerobook-logo.png" alt="" width="1254" height="1254"></span><?php endif ?>AeroBook</a>
     <span class="header-note">Your journey starts here</span>
 </header>
-<main class="page-main">
+<?php if(!empty($panelLayout)): ?><div class="page-main"><?php else: ?><main class="page-main page-main-with-back"><?php endif ?>
+<?php if(empty($panelLayout))require BASE_PATH.'/app/Views/partials/back-button.php'; ?>

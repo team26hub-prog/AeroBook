@@ -1,3 +1,4 @@
 .env
+/tests/.runtime/
 /public/uploads/payment-proofs/*
 !/public/uploads/payment-proofs/.gitkeep

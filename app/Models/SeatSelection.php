@@ -20,7 +20,7 @@ final class SeatSelection extends Model
 
     public function booking(int $bookingId,int $customerId): ?array
     {
-        $q=$this->db->prepare("SELECT b.id,b.pnr,b.status,b.flight_id,f.flight_number,f.departure_at,f.arrival_at,f.base_fare,f.currency,al.name airline_name,
+        $q=$this->db->prepare("SELECT b.id,b.pnr,b.status,b.flight_id,b.total_amount,b.currency,f.flight_number,f.departure_at,f.arrival_at,f.base_fare,al.name airline_name,
             da.iata_code departure_code,da.city departure_city,aa.iata_code arrival_code,aa.city arrival_city
             FROM bookings b JOIN flights f ON f.id=b.flight_id JOIN airlines al ON al.id=f.airline_id
             JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id
@@ -63,7 +63,7 @@ final class SeatSelection extends Model
             $lock=$this->db->prepare("SELECT id,status FROM seats WHERE flight_id=? AND id IN ({$marks}) ORDER BY id FOR UPDATE");$lock->execute([(int)$booking['flight_id'],...$seatIds]);$locked=$lock->fetchAll();
             if(count($locked)!==count($seatIds))throw new RuntimeException('One or more selected seats do not belong to this flight.');
             $occupancy=$this->db->prepare("SELECT seat_id,booking_id FROM booking_seats WHERE seat_id IN ({$marks}) ORDER BY seat_id FOR UPDATE");$occupancy->execute($seatIds);$occupied=[];foreach($occupancy->fetchAll() as $row)$occupied[(int)$row['seat_id']]=(int)$row['booking_id'];
-            foreach($locked as $seat){$seatId=(int)$seat['id'];if($seat['status']!=='available'||(isset($occupied[$seatId])&&$occupied[$seatId]!==$bookingId))throw new RuntimeException('A selected seat is no longer available. Please choose another seat.');}
+            foreach($locked as $seat){$seatId=(int)$seat['id'];if($seat['status']!=='available'||(isset($occupied[$seatId])&&$occupied[$seatId]!==$bookingId))throw new \App\Core\SeatUnavailable();}
             $this->db->prepare('DELETE FROM booking_seats WHERE booking_id=?')->execute([$bookingId]);
             $insert=$this->db->prepare('INSERT INTO booking_seats(booking_id,seat_id,passenger_id,status) VALUES(?,?,?,"reserved")');
             foreach($normalized as $passengerId=>$seatId)$insert->execute([$bookingId,$seatId,$passengerId]);

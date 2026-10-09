@@ -8,6 +8,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Models\AdminModel;
+use App\Models\AdminDashboard;
 use RuntimeException;
 
 final class AdminController extends Controller
@@ -15,7 +16,14 @@ final class AdminController extends Controller
     private AdminModel $model;
     public function __construct() { $this->model=new AdminModel(); }
 
-    public function dashboard(): void { $this->page('dashboard'); }
+    public function dashboard(): void
+    {
+        if(($_GET['dashboard_data']??null)!=='1'){$this->page('dashboard');return;}
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        try{echo json_encode((new AdminDashboard())->data(),JSON_THROW_ON_ERROR);}
+        catch(\Throwable $e){error_log('Admin chart refresh error: '.$e->getMessage());http_response_code(500);echo json_encode(['error'=>'Dashboard charts could not be refreshed.']);}
+    }
     public function airlines(): void { $this->page('airlines'); }
     public function airports(): void { $this->page('airports'); }
     public function flights(): void { $this->page('flights'); }
@@ -26,7 +34,12 @@ final class AdminController extends Controller
     private function page(string $section): void
     {
         try {
-            $this->view('admin/panel',['section'=>$section,'title'=>ucfirst($section),'csrf'=>Csrf::token(),'adminName'=>Auth::name(),'rows'=>$section==='dashboard'?[]:$this->model->all($section),'stats'=>$section==='dashboard'?$this->model->dashboard():[],'options'=>$this->model->options(),'errors'=>Session::pullFlash('errors',[]),'success'=>Session::pullFlash('success')]);
+            $charts=null;
+            if($section==='dashboard'){
+                try{$charts=(new AdminDashboard())->data();}
+                catch(\Throwable $e){error_log('Admin chart data error: '.$e->getMessage());}
+            }
+            $this->view('admin/panel',['section'=>$section,'title'=>ucfirst($section),'csrf'=>Csrf::token(),'adminName'=>Auth::name(),'rows'=>$section==='dashboard'?[]:$this->model->all($section),'stats'=>$section==='dashboard'?$this->model->dashboard():[],'charts'=>$charts,'options'=>$this->model->options(),'errors'=>Session::pullFlash('errors',[]),'success'=>Session::pullFlash('success')]);
         } catch (\Throwable $e) { error_log('Admin page error: '.$e->getMessage()); http_response_code(500);$this->view('admin/error'); }
     }
 

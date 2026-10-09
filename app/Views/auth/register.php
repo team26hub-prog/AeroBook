@@ -1,4 +1,4 @@
-<?php require BASE_PATH . '/app/Views/layouts/header.php'; ?>
+<?php $authPage=true;require BASE_PATH . '/app/Views/layouts/header.php'; ?>
 <section class="auth-card" aria-labelledby="page-heading">
     <p class="eyebrow">Customer account</p>
     <h1 id="page-heading">Create your AeroBook account</h1>

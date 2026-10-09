@@ -1,1 +1,16 @@
-<?php http_response_code(500); ?><!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin error | AeroBook</title><link rel="stylesheet" href="/assets/css/auth.css"><main class="page-main"><section class="auth-card"><h1>Admin page unavailable</h1><p class="intro">We couldn’t load this page. Please try again.</p><a class="button" href="/admin">Return to dashboard</a></section></main></html>
+<?php
+declare(strict_types=1);
+http_response_code(500);
+$title='Admin page unavailable';
+$adminHeaderTitle=$title;
+$adminHeaderStandalone=true;
+$e=static fn($value)=>htmlspecialchars((string)$value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+require BASE_PATH.'/app/Views/layouts/admin-start.php';
+?>
+        <section class="auth-card">
+            <h2>Admin page unavailable</h2>
+            <p class="intro">We couldn't load this page. Please try again.</p>
+            <a class="button" href="/admin">Return to dashboard</a>
+        </section>
+<?php require BASE_PATH.'/app/Views/layouts/admin-end.php'; ?>
+<?php require BASE_PATH.'/app/Views/layouts/footer.php'; ?>

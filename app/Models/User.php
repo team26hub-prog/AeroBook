@@ -7,6 +7,14 @@ use App\Core\Model;
 
 final class User extends Model
 {
+    public function profileForCustomer(int $userId): ?array
+    {
+        $statement = $this->db->prepare("SELECT full_name, email, phone, role, status, created_at FROM users WHERE id = :id AND role = 'customer' LIMIT 1");
+        $statement->execute(['id' => $userId]);
+        $user = $statement->fetch();
+        return $user === false ? null : $user;
+    }
+
     /** @return array{id:int, full_name:string, email:string, password_hash:string, role:string, status:string}|null */
     public function findByEmail(string $email): ?array
     {

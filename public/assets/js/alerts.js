@@ -7,7 +7,7 @@
         showCloseButton: true,
         timerProgressBar: true,
         heightAuto: false,
-        customClass: { popup: 'aerobook-toast' },
+        customClass: { container: 'aerobook-toast-container', popup: 'aerobook-toast' },
         didOpen: element => {
             element.addEventListener('mouseenter', Swal.stopTimer);
             element.addEventListener('mouseleave', Swal.resumeTimer);
@@ -36,7 +36,7 @@
 
     const messageNodes = [...document.querySelectorAll(
         '.alert-success, .alert-error, .alert-warning, .alert-info, .admin-alert.success, .admin-alert.error, .admin-alert.warning, .admin-alert.info, .customer-notice, [data-toast-type]'
-    )];
+    )].filter(node => !node.hasAttribute('data-popup-title'));
     const typeOf = node => {
         const declared = node.dataset.toastType;
         if (Object.hasOwn(toastTitles, declared)) return declared;
@@ -57,7 +57,21 @@
         showToast(type, messages.map(item => item.text).join('\n'));
     }
 
+    document.querySelectorAll('[data-popup-title]').forEach(node => {
+        if (!Swal) return;
+        node.hidden = true;
+        Swal.fire({
+            icon: 'warning',
+            titleText: node.dataset.popupTitle,
+            text: node.querySelector('p')?.textContent.trim() || node.textContent.trim(),
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#597f97',
+            heightAuto: false
+        });
+    });
+
     document.addEventListener('submit', async event => {
+        if (event.defaultPrevented) return;
         const form = event.target;
         if (!(form instanceof HTMLFormElement) || form.dataset.submitting === 'true') return;
         const submitter = event.submitter instanceof HTMLButtonElement ? event.submitter : null;
@@ -109,9 +123,17 @@
 
         form.dataset.submitting = 'true';
         if (submitter) {
+            // Disabled buttons are omitted from the POST data; preserve the chosen action.
+            if (submitter.name) {
+                const action = document.createElement('input');
+                action.type = 'hidden';
+                action.name = submitter.name;
+                action.value = submitter.value;
+                form.appendChild(action);
+            }
             submitter.dataset.originalText = submitter.textContent || '';
             submitter.disabled = true;
             submitter.setAttribute('aria-busy', 'true');
         }
-    }, true);
+    });
 })();

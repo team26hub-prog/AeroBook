@@ -36,9 +36,7 @@ header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 $router = new Router();
 $authMiddleware = new AuthMiddleware();
 
-$router->get('/', static function (): void {
-    header('Location: /login', true, 303);
-});
+$router->get('/', [AccessController::class, 'home']);
 
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);

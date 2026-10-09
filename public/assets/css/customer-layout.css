@@ -1,0 +1,18 @@
+/* All customer modules use the shared content gutter, without a second inset. */
+.customer-app{--customer-content-width:1180px;--customer-gutter:clamp(18px,3vw,42px)}
+.customer-app .customer-content{width:100%;max-width:var(--customer-content-width);padding:32px var(--customer-gutter) 54px}
+.customer-content :is(.flight-shell,.booking-page,.payment-page,.seat-page,.ticket-page,.customer-profile,.customer-bookings){width:100%;max-width:none;margin:0;padding:0}
+.customer-content .flight-search-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+.customer-content .flight-search-form label{min-width:0}
+.customer-content .available-flight-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.customer-content .available-flight-header{flex-wrap:wrap}
+.customer-content .available-flight-footer{flex-wrap:wrap}
+.customer-content .available-flight-footer>div{min-width:0}
+@media(min-width:1300px){.customer-content .flight-search-form{grid-template-columns:1.2fr 1.2fr .9fr auto}}
+@media(max-width:820px){
+    .customer-app{--customer-gutter:clamp(14px,3vw,24px)}
+    .customer-app .customer-content{padding:24px max(var(--customer-gutter),env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(var(--customer-gutter),env(safe-area-inset-left))}
+}
+@media(max-width:560px){.customer-content .flight-search-form{grid-template-columns:minmax(0,1fr)}.customer-app .customer-content{padding-top:20px}}
+@media(max-width:360px){.customer-app{--customer-gutter:12px}}
+@media print{.customer-app .customer-content{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}}

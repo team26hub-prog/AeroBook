@@ -9,9 +9,23 @@ use App\Core\Csrf;
 use App\Core\Session;
 use App\Models\Booking;
 use App\Models\ETicket;
+use App\Models\User;
 
 final class AccessController extends Controller
 {
+    public function home(): void
+    {
+        $this->view('customer/home', [
+            'title'=>'Home',
+            'section'=>'home',
+            'activeSection'=>'home',
+            'userName'=>Auth::name(),
+            'csrf'=>Csrf::token(),
+            'success'=>Session::pullFlash('success'),
+            'errors'=>Session::pullFlash('errors', []),
+        ]);
+    }
+
     public function customer(): void
     {
         $sections=[
@@ -20,13 +34,20 @@ final class AccessController extends Controller
             'seats'=>['Seat Selection','Choose a seat for each passenger on an eligible booking.'],
             'payments'=>['Payments','Submit manual payment details and track admin verification.'],
             'tickets'=>['E-Tickets','View and print e-tickets for confirmed bookings.'],
-            'profile'=>['Profile / Account','Your account area is ready. Profile management will be added later.'],
+            'profile'=>['Profile / Account','View your personal details and access your travel account.'],
         ];
         $section=is_scalar($_GET['section']??null)?(string)$_GET['section']:'home';
         if(!isset($sections[$section]))$section='home';
         $bookings=[];
         $tickets=[];
+        $profile=null;
         $errors=[];
+        if($section==='profile'){
+            try{
+                $profile=(new User())->profileForCustomer((int)Session::get('user_id',0));
+                if($profile===null)$errors[]='Your account details are unavailable. Please sign in again.';
+            }catch(\Throwable $e){error_log('Customer profile error: '.$e->getMessage());$errors[]='Your account details are temporarily unavailable. Please refresh and try again.';}
+        }
         if($section==='bookings'){
             try{$bookings=(new Booking())->listForCustomer((int)Session::get('user_id',0));}
             catch(\Throwable $e){error_log('Customer booking list error: '.$e->getMessage());$errors[]='Your bookings are temporarily unavailable. Please refresh and try again.';}
@@ -47,6 +68,7 @@ final class AccessController extends Controller
             'errors'=>array_merge($errors??[],Session::pullFlash('errors',[])),
             'bookings'=>$bookings,
             'tickets'=>$tickets,
+            'profile'=>$profile,
         ]);
     }
 

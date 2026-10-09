@@ -1,0 +1,16 @@
+.sidebar-logo{position:relative;display:block;width:42px;height:34px;flex:0 0 42px;overflow:hidden;border-radius:7px;background:#fff}.sidebar-logo img{position:absolute;top:50%;left:50%;display:block;width:54px;height:54px;max-width:none;transform:translate(-50%,-52%)}.sidebar-brand-copy{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}.sidebar-brand-copy>span{white-space:nowrap}.customer-brand .sidebar-brand-copy small,.admin-brand .sidebar-brand-copy small{font-size:.55rem;padding:3px 6px;line-height:1}
+.site-header.auth-topbar{background:#fff;border-bottom:1px solid #e0e7ec}.auth-topbar .brand{display:inline-flex;align-items:center;gap:8px;color:#183251}.auth-topbar .header-note{color:#687b8b}.auth-topbar .auth-logo{width:30px;height:24px;flex-basis:30px;border-radius:0}.auth-topbar .auth-logo img{width:38px;height:38px}@media(max-width:420px){.auth-topbar{gap:12px}.auth-topbar .header-note{max-width:110px;text-align:right;line-height:1.4}.auth-topbar .brand{gap:8px}}
+
+.sidebar-menu-label{display:inline-flex;align-items:center;gap:10px;min-width:0}.sidebar-menu-label>span{min-width:0}.sidebar-menu-icon{display:block;flex:0 0 20px;width:20px;height:20px;color:inherit}.customer-signout button,.admin-user button{display:flex;align-items:center;gap:8px}
+.admin-sidebar .admin-brand:hover,.customer-sidebar .customer-brand:hover{color:#fff;background:transparent;text-decoration:none;transform:none;box-shadow:none}
+
+.customer-sidebar .customer-brand .sidebar-brand-copy{justify-content:center;gap:0}.customer-sidebar .customer-brand .sidebar-brand-copy>span{font-size:1.5rem;line-height:1.2;font-weight:800}
+
+.admin-sidebar .admin-brand .sidebar-brand-copy{justify-content:center;gap:0}.admin-sidebar .admin-brand .sidebar-brand-copy>span{font-size:1.5rem;line-height:1.2;font-weight:800}
+.admin-sidebar .admin-brand .sidebar-logo,.customer-sidebar .customer-brand .sidebar-logo{width:32px;height:26px;flex-basis:32px;border-radius:5px}
+.admin-sidebar .admin-brand .sidebar-logo img,.customer-sidebar .customer-brand .sidebar-logo img{width:41px;height:41px}
+.admin-sidebar .admin-brand .sidebar-brand-copy>span,.customer-sidebar .customer-brand .sidebar-brand-copy>span{color:#d6e3ec}
+@supports ((background-clip:text) or (-webkit-background-clip:text)){
+    .admin-sidebar .admin-brand .sidebar-brand-copy>span,.customer-sidebar .customer-brand .sidebar-brand-copy>span{background:linear-gradient(100deg,#fff 0%,#d6e3ec 45%,#88a5b9 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+}
+@media(forced-colors:active){.admin-sidebar .admin-brand .sidebar-brand-copy>span,.customer-sidebar .customer-brand .sidebar-brand-copy>span{background:none;-webkit-text-fill-color:LinkText;color:LinkText}}

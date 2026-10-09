@@ -21,7 +21,7 @@ final class Booking extends Model
             $q->execute([$flightId]);$flight=$q->fetch();
             if(!$flight||!in_array($flight['status'],['scheduled','boarding'],true)||$flight['airline_status']!=='active'||$flight['departure_status']!=='active'||$flight['arrival_status']!=='active'||strtotime($flight['departure_at'])<time())throw new RuntimeException('This flight is no longer available. Search for another flight.');
             if(number_format((float)$flight['base_fare'],2,'.','')!==number_format((float)$reviewedFare,2,'.','')||$flight['currency']!==$reviewedCurrency)throw new RuntimeException('The fare changed since your review. Please review the updated booking total.');
-            if((int)$flight['available_seats']<count($passengers))throw new RuntimeException('There are not enough available seats for the passenger count. Please search again.');
+            if((int)$flight['available_seats']<count($passengers))throw new \App\Core\InsufficientSeats((int)$flight['available_seats']);
             $fareCents=(int)round((float)$flight['base_fare']*100);$totalCents=$fareCents*count($passengers);
             if($totalCents>9999999999)throw new RuntimeException('The total amount exceeds the booking limit.');
             $total=number_format($totalCents/100,2,'.','');

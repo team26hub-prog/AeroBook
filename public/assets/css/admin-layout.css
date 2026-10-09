@@ -1,0 +1,44 @@
+/* Shared dimensions for the sidebar, sticky header and every admin page. */
+:root{--admin-sidebar-width:252px;--admin-content-width:1440px;--admin-gutter:clamp(24px,3vw,40px);--admin-section-gap:20px;--admin-card-padding:24px}
+.admin-shell{width:100%;min-width:0;overflow:visible}
+.admin-sidebar{width:var(--admin-sidebar-width)}
+.admin-main{width:calc(100% - var(--admin-sidebar-width));max-width:none;min-width:0;margin:0 0 0 var(--admin-sidebar-width);padding:0;overflow:visible}
+.admin-content{width:100%;max-width:var(--admin-content-width);min-width:0;margin:0 auto;padding:28px var(--admin-gutter) 60px}
+.admin-header{display:block;margin-left:var(--admin-sidebar-width);padding:0}
+.admin-header-inner{width:100%;max-width:var(--admin-content-width);height:100%;min-width:0;margin:0 auto;padding:0 var(--admin-gutter);display:flex;align-items:center;gap:20px}
+.admin-content>.admin-card,.admin-content>.stat-grid,.admin-content>.admin-alert{margin:0 0 var(--admin-section-gap)}
+.admin-content>.dashboard-analytics{margin:var(--admin-section-gap) 0}
+.admin-content>:last-child{margin-bottom:0}
+.admin-content .admin-card,.admin-content .dashboard-chart-grid .dashboard-chart-card{padding:var(--admin-card-padding)}
+.admin-content .stat-grid,.admin-content .dashboard-chart-grid{gap:var(--admin-section-gap)}
+.admin-content .card-heading{gap:16px;margin-bottom:18px}
+.admin-content .card-heading p{line-height:1.5}
+.admin-shell-standalone .admin-header{margin-left:0}
+.admin-shell-standalone .admin-main{width:100%;margin-left:0}
+.admin-shell-standalone .admin-content{display:grid;justify-items:center}
+@media(max-width:1050px){:root{--admin-gutter:24px;--admin-card-padding:20px}}
+@media(max-width:820px){
+    :root{--admin-gutter:16px;--admin-section-gap:16px;--admin-card-padding:16px}
+    .admin-sidebar{width:min(320px,88vw)}
+    .admin-main{width:100%;margin:0;padding:0}
+    .admin-content{padding:20px max(var(--admin-gutter),env(safe-area-inset-right)) calc(100px + env(safe-area-inset-bottom)) max(var(--admin-gutter),env(safe-area-inset-left))}
+    .admin-header{margin-left:0;padding:env(safe-area-inset-top) 0 0}
+    .admin-header-inner{padding:0 max(var(--admin-gutter),env(safe-area-inset-right)) 0 max(var(--admin-gutter),env(safe-area-inset-left));gap:12px}
+    .admin-content .card-heading{gap:12px;flex-wrap:wrap;margin-bottom:16px}
+}
+@media(max-width:420px){:root{--admin-gutter:12px;--admin-card-padding:14px}.admin-header-inner{gap:10px}}
+
+/* Consistent card feedback across admin management pages. */
+:is(.admin-section-airlines,.admin-section-airports,.admin-section-flights,.admin-section-seats,.admin-section-bookings,.admin-section-payments) .admin-card{
+    transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+@media(hover:hover) and (pointer:fine){
+    :is(.admin-section-airlines,.admin-section-airports,.admin-section-flights,.admin-section-seats,.admin-section-bookings,.admin-section-payments) .admin-card:hover{
+        transform:translateY(-3px);
+        border-color:#a9c0d0;
+        box-shadow:0 8px 22px rgb(24 50 81 / 10%);
+    }
+}
+@media(prefers-reduced-motion:reduce){
+    :is(.admin-section-airlines,.admin-section-airports,.admin-section-flights,.admin-section-seats,.admin-section-bookings,.admin-section-payments) .admin-card{transition:none;transform:none!important}
+}

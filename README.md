@@ -21,6 +21,8 @@ For an existing database created from an older schema, apply each migration in `
 
 ## Authentication
 
+- Public Home page: `/` (available to guests, customers, and admins, with Login and Sign Up options for guests)
+- Flight search, booking, seats, payments, account pages, and admin tools remain protected by role middleware. Guests are redirected to `/login` when accessing these modules.
 - Customer registration and sign-in: `/register` and `/login`
 - Sign-in for all accounts: `/login` (admins go to `/admin`, customers go to `/account`)
 - Sign-out is submitted as a CSRF-protected POST form.

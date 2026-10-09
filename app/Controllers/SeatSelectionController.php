@@ -38,6 +38,7 @@ final class SeatSelectionController extends Controller
         foreach($raw as $passengerId=>$seatId){$p=filter_var($passengerId,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);$s=filter_var($seatId,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);if($p===false||$s===false){Session::flash('errors',['The passenger or seat selection is invalid.']);$this->redirect('/seat-selection?booking_id='.(int)$bookingId);}$selection[(int)$p]=(int)$s;}
         try{$this->seats->save((int)$bookingId,(int)Session::get('user_id',0),$selection);Session::flash('success','Seats saved for every passenger.');$this->redirect('/payments?booking_id='.(int)$bookingId);}
         catch(\PDOException $e){error_log('Seat assignment database error: '.$e->getMessage());Session::flash('errors',['Could not save these seats. Refresh the layout and try again.']);}
+        catch(\App\Core\SeatUnavailable $e){Session::flash('flight_alert',['title'=>'Seat no longer available','message'=>'One of your selected seats was reserved or made unavailable before saving. The seat map has been refreshed. Please choose another seat.']);}
         catch(RuntimeException $e){Session::flash('errors',[$e->getMessage()]);}
         catch(\Throwable $e){error_log('Seat assignment error: '.$e->getMessage());Session::flash('errors',['Could not save these seats. Refresh the layout and try again.']);}
         $this->redirect('/seat-selection?booking_id='.(int)$bookingId);
