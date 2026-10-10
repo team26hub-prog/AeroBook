@@ -17,10 +17,14 @@ try {
     }
     & $Php -l public/index.php
     if ($LASTEXITCODE -ne 0) { $failures += 'public/index.php' }
+    foreach ($entry in @('setup.php','public/setup.php')) {
+        & $Php -l $entry
+        if ($LASTEXITCODE -ne 0) { $failures += $entry }
+    }
     $javascript = @(Get-ChildItem tests -Filter '*.test.cjs' | ForEach-Object { $_.FullName })
     & $Node --test @javascript
     if ($LASTEXITCODE -ne 0) { $failures += 'JavaScript tests' }
-    foreach ($test in @('public-home.php','ui-consistency.php','flight-availability.php','admin-dashboard.mysql.php','application.integration.php','application.functional.php','database.seed.php')) {
+    foreach ($test in @('setup.php','public-home.php','ui-consistency.php','admin-workspace.php','flight-availability.php','admin-dashboard.mysql.php','application.integration.php','application.functional.php','database.seed.php')) {
         & $Php ('tests/' + $test)
         if ($LASTEXITCODE -ne 0) { $failures += $test }
     }

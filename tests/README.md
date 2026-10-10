@@ -16,6 +16,8 @@ Requirements: PHP 8.3+ with PDO MySQL and fileinfo, Node 22+, and running MySQL 
 
 | Suite | Coverage |
 | --- | --- |
+| `setup.php` | Disposable first-time MySQL/HTTP install, token/HTTPS/CSRF gates, credential secrecy, literal dotenv passwords, existing-data preservation, exclusive config writes, permanent locks and failed connection recovery. Also creates/removes a temporary MySQL user, so this development-only suite needs CREATE USER and GRANT privileges. |
+| `admin-workspace.php`, `admin-workspace.test.cjs` | Seven admin sections, guided collapsible forms, deliberate route choices, contextual help, valid row form ownership and CSRF, payment decision controls, dashboard priorities, search/status filters, natural sorting and pagination |
 | `application.integration.php` | CSRF, sessions, authentication, hash upgrades, customer profile privacy; Admin airline/airport/flight validation and CRUD; seat generation/status; booking totals, stale fare checks, transaction rollback; seat ownership/conflicts; payment validation, rejection/resubmission, verification; ticket creation, cancellation; foreign keys and unique constraints |
 | `application.functional.php` | Actual HTTP routing, guest/customer/admin access across every protected page, CSRF on every POST form, registration and login validation, session invalidation, security headers, escaping, passenger validation; complete flight-to-ticket and cancellation flow; IDOR checks; live seat/chart JSON; admin actions, proof traversal, 404/405 responses |
 | `database.seed.php` | Real seed and additional-flight import, counts and cabin layouts, repeated imports, preservation of bookings/reservations/blocked seats, empty model/chart states |

@@ -12,6 +12,7 @@ require BASE_PATH.'/app/Views/layouts/header.php';
 <div class="customer-app">
     <header class="customer-topbar<?= $isAuthenticated?'':' customer-topbar-guest' ?>">
         <button class="customer-menu-toggle" type="button" aria-expanded="false" aria-controls="customer-sidebar" aria-label="Open customer navigation"><span aria-hidden="true"><i></i><i></i><i></i></span></button>
+        <a class="mobile-navbar-logo" href="/" aria-label="AeroBook home"><img src="/assets/images/aerobook-logo.png?v=globe-transparent" alt="" width="1536" height="1024"></a>
         <div class="customer-top-title"><span><?= $isAuthenticated?'Your travel':'Welcome' ?></span><strong><?= $customerEscape($title) ?></strong></div>
         <?php if($isAuthenticated): ?>
         <span class="customer-greeting">Hi, <?= $customerEscape($userName) ?></span>
@@ -22,7 +23,7 @@ require BASE_PATH.'/app/Views/layouts/header.php';
     <button class="customer-backdrop" type="button" aria-label="Close customer navigation" tabindex="-1"></button>
     <div class="customer-layout">
         <aside class="customer-sidebar" id="customer-sidebar" aria-label="Customer navigation">
-            <a class="customer-brand" href="/"><span class="sidebar-logo"><img src="/assets/images/aerobook-logo.png" alt="" width="1254" height="1254"></span><span class="sidebar-brand-copy"><span>AeroBook</span></span></a>
+            <a class="customer-brand" href="/"><span class="sidebar-logo"><img src="/assets/images/aerobook-logo.png?v=globe-transparent" alt="" width="1536" height="1024"></span><span class="sidebar-brand-copy"><span>AeroBook</span></span></a>
             <button class="customer-sidebar-close" type="button" aria-label="Close customer navigation">Close</button>
             <nav>
                 <?php foreach($customerNav as $key=>$label): ?>

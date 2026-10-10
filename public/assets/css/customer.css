@@ -537,4 +537,18 @@ body{display:block;min-width:0;background:var(--customer-bg)}.site-header,.site-
 .customer-topbar .customer-top-title{margin-left:0;padding-left:0;border-left:0}
 
 /* Consistent separation between Home sections and their individual cards. */
+.customer-bookings .customer-booking-card{text-align:start;line-height:1.5}
+.customer-bookings .customer-booking-main{flex:1;overflow-wrap:anywhere}
+.customer-bookings .customer-booking-main p{text-align:justify;text-align-last:start;line-height:1.65}
+.customer-bookings :is(.customer-eyebrow,.booking-passenger small,.customer-booking-actions a){overflow-wrap:anywhere}
+.customer-bookings :is(.booking-summary-details>div,.booking-passenger>div){align-content:start;justify-items:start;gap:6px}
+.customer-bookings .booking-passenger{align-items:start}
+.customer-bookings :is(.payment-status-pill,.customer-booking-status){max-width:100%;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:560px){
+    .customer-bookings .booking-summary-details{gap:16px 12px}
+    .customer-bookings .booking-passenger{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px 0}
+    .customer-bookings .booking-passenger>div:first-child{grid-column:1/-1}
+    .customer-bookings .booking-passenger>div:last-child{grid-column:auto;padding-top:0;border-top:0}
+    .customer-bookings .customer-booking-actions>a{width:100%;justify-content:center;text-align:center}
+}
 .customer-home-sections{--home-section-gap:28px;--home-card-gap:20px;display:grid;gap:var(--home-section-gap);min-width:0}.customer-home-sections>section{min-width:0;margin:0}.customer-home-sections :is(.customer-feature-grid,.customer-step-list,.customer-trip-list,.customer-tip-grid,.customer-faq-list){gap:var(--home-card-gap)}.customer-home-sections :is(.customer-feature-card,.customer-step,.customer-trip-card,.customer-tip-card,.customer-faq-item){margin:0}@media(max-width:820px){.customer-home-sections{--home-section-gap:22px;--home-card-gap:16px}}@media(max-width:420px){.customer-home-sections{--home-section-gap:20px;--home-card-gap:14px}}

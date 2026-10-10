@@ -70,5 +70,16 @@ foreach(['customer','admin'] as $actor)$suite->add('functional: '.$actor.' cance
 $suite->add('regression: dashboard PKR revenue excludes verified payments in other currencies',function()use($environment,$admin){$b=$environment->booking();$environment->assign($b);$admin->reviewPayment($environment->submitted($b),'verified');$usd=$environment->booking(2,1,2);$environment->assign($usd,2,[9]);$admin->reviewPayment($environment->submitted($usd,2),'verified');equal((float)$admin->dashboard()['revenue'],10.25);});
 $suite->add('database: foreign keys reject orphan bookings and cross-booking passenger seats',function()use($environment,$db){rejects(fn()=> $db->exec("INSERT INTO bookings(user_id,flight_id,pnr,total_amount) VALUES(999,1,'INVALID',10.25)"),PDOException::class);$a=$environment->booking();$b=$environment->booking(2);$p=(int)$environment->scalar('SELECT id FROM passengers WHERE booking_id=?',[$a['id']]);rejects(fn()=> $db->prepare('INSERT INTO booking_seats(booking_id,seat_id,passenger_id) VALUES(?,?,?)')->execute([$b['id'],1,$p]),PDOException::class);});
 $suite->add('database: unique seat and ticket constraints prevent duplicate allocation',function()use($environment,$db,$admin){$a=$environment->booking();$selection=$environment->assign($a);$admin->reviewPayment($environment->submitted($a),'verified');$p=array_key_first($selection);rejects(fn()=> $db->prepare('INSERT INTO booking_seats(booking_id,seat_id,passenger_id) VALUES(?,?,?)')->execute([$a['id'],1,$p]),PDOException::class);rejects(fn()=> $db->prepare('INSERT INTO e_tickets(booking_id,passenger_id,ticket_number) VALUES(?,?,?)')->execute([$a['id'],$p,'DUPLICATE']),PDOException::class);});
+$suite->add('regression: airport departures span dates and destinations and exclude unavailable flights',function()use($flights,$environment,$db){
+    $db->exec("UPDATE flights SET arrival_airport_id=3,departure_at=DATE_ADD(departure_at,INTERVAL 2 DAY),arrival_at=DATE_ADD(arrival_at,INTERVAL 2 DAY) WHERE id=2");
+    equal(array_map('intval',array_column($flights->departingFrom(1),'id')),[1,2]);
+    equal($flights->departingFrom(2),[]);
+    $date=substr($environment->scalar('SELECT departure_at FROM flights WHERE id=1'),0,10);
+    equal(array_map('intval',array_column($flights->search(1,2,$date),'id')),[1]);
+    $db->exec("UPDATE seats SET status='blocked' WHERE flight_id=1");
+    equal(array_map('intval',array_column($flights->departingFrom(1),'id')),[2]);
+    $db->exec("UPDATE airports SET status='inactive' WHERE id=3");
+    equal($flights->departingFrom(1),[]);
+});
 $failures=$suite->run(fn()=> $environment->reset());
 $environment->cleanup();session_write_close();$output=ob_get_clean();echo $output;exit($failures?1:0);

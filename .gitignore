@@ -1,4 +1,6 @@
 .env
+/storage/
+/.setup-write-*
 /tests/.runtime/
 /public/uploads/payment-proofs/*
 !/public/uploads/payment-proofs/.gitkeep

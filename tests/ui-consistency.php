@@ -40,14 +40,16 @@ foreach(['dashboard','airlines','airports','flights','seats','bookings','payment
     check($xpath->query('//main | //*[@role="main"]')->length===1,'Admin main landmark duplicated: '.$section);
     check($xpath->query('//main//main')->length===0,'Nested main: '.$section);
     check(str_contains($html,'action="/admin/logout"'),'Admin sign-out missing');
-    check($xpath->query('//*[@data-page-back]')->length===1,'Shared admin Back button missing: '.$section);
+    check($xpath->query('//*[@data-page-back]')->length===($section==='dashboard'?0:1),'Admin Back button visibility incorrect: '.$section);
 }
 $_SERVER['REQUEST_URI']='/login';
 $html=renderUi('auth/login',['title'=>'Login','csrf'=>'test-token','old'=>[],'errors'=>[],'success'=>null]);
 check(uiDocument($html)->query('//main')->length===1,'Auth main landmark missing');
-check(uiDocument($html)->query('//*[@data-page-back]')->length===1,'Login Back button missing');
+check(uiDocument($html)->query('//*[@data-page-back]')->length===0,'Login should not have a Back button');
+check(uiDocument($html)->query('//header//nav/a[@href="/" and normalize-space(.)="Home"]')->length===1,'Login Home link missing');
 $_SERVER['REQUEST_URI']='/register';
 $html=renderUi('auth/register',['title'=>'Sign Up','csrf'=>'test-token','old'=>[],'errors'=>[],'success'=>null]);
-check(uiDocument($html)->query('//*[@data-page-back]')->length===1,'Sign Up Back button missing');
+check(uiDocument($html)->query('//*[@data-page-back]')->length===0,'Sign Up should not have a Back button');
+check(uiDocument($html)->query('//header//nav/a[@href="/" and normalize-space(.)="Home"]')->length===1,'Sign Up Home link missing');
 ob_end_clean();
 echo "PASS: Home entry links and honest empty data; valid landmarks and section labels; shared customer layout; seven admin sections and login rendering\n";

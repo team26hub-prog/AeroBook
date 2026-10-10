@@ -1,0 +1,30 @@
+---
+# Default: main domain. For another domain, use its exact cPanel document root.
+# Clone the Git repository OUTSIDE this directory (e.g. $HOME/repositories/aerobook).
+deployment:
+  tasks:
+    - |
+      set -eu
+      export DEPLOYPATH="$HOME/public_html"
+      test -d "$DEPLOYPATH"
+      test -f public/index.php
+      test -x /usr/bin/rsync
+      # Refuse a repository deployed onto itself or a destination outside the account.
+      account_root="$(realpath "$HOME")"
+      destination="$(realpath "$DEPLOYPATH")"
+      repository="$(pwd -P)"
+      case "$destination" in "$account_root"/*) ;; *) exit 1 ;; esac
+      test "$destination" != "$repository"
+      case "$destination/" in "$repository/"*) exit 1 ;; esac
+      # No --delete: never remove production uploads, settings, or installation state.
+      # Explicit allowlist: no .env, .git, tests, seeds, editor files, or local secrets.
+      # Install HTTP protections before any private application or schema files.
+      /usr/bin/rsync -t --chmod=F644 .htaccess "$DEPLOYPATH/"
+      /usr/bin/rsync -rlt --chmod=D755,F644 app/ "$DEPLOYPATH/app/"
+      /bin/mkdir -p "$DEPLOYPATH/config" "$DEPLOYPATH/database"
+      /usr/bin/rsync -t --chmod=F644 config/bootstrap.php config/installer.php "$DEPLOYPATH/config/"
+      /usr/bin/rsync -t --chmod=F644 database/schema.sql "$DEPLOYPATH/database/"
+      /bin/mkdir -p "$DEPLOYPATH/public"
+      /usr/bin/rsync -t --chmod=F644 public/index.php public/.htaccess public/setup.php "$DEPLOYPATH/public/"
+      /usr/bin/rsync -rlt --chmod=D755,F644 public/assets/ "$DEPLOYPATH/public/assets/"
+      /usr/bin/rsync -t --chmod=F644 setup.php "$DEPLOYPATH/"

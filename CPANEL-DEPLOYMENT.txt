@@ -1,0 +1,150 @@
+AeroBook: cPanel installation and GitHub deployment
+=================================================
+
+Hosting layout
+--------------
+The supplied .cpanel.yml defaults to the main domain's $HOME/public_html.
+The real cPanel account/domain was not provided; verify the document root in
+cPanel > Domains. For another domain, edit ONLY DEPLOYPATH in .cpanel.yml to
+the exact absolute document root before deploying. The document root must
+be dedicated to AeroBook, outside the Git checkout, and inside your account.
+Do not deploy over another website.
+
+The complete application is placed in that directory, with public/index.php
+as its front controller. The supplied ROOT .htaccess denies HTTP access to
+app/, config/, database/, storage/, .env and repository metadata, and maps
+/assets to public/assets. Apache must allow these .htaccess rewrite rules.
+Alternatively, for a domain where cPanel allows a custom document root,
+deploy to $HOME/aerobook and point its document root to $HOME/aerobook/public.
+In that layout public/setup.php calls the private root installer. Always
+use the domain root URL (no /public path or subdirectory in APP_URL).
+
+The deployment allowlist copies app/, config/bootstrap.php,
+config/installer.php, database/schema.sql, public/index.php, public/.htaccess,
+public/setup.php, public/assets/,
+the root .htaccess and setup.php. It does not import SQL, copy .env or storage,
+or use --delete. Tests, Git data, example/local credentials, demo seeds,
+migrations and documentation are not deployed. Apply future migrations
+manually after review and a database backup. Files removed from Git remain
+on the server: remove obsolete code deliberately after reviewing it.
+Root .htaccess is managed by deployment; save any custom hosting rules
+and merge them into the repository copy before deploying.
+
+First installation
+------------------
+1. Back up any existing website and database. In cPanel > Domains, confirm
+   the intended document root. Enable SSL/AutoSSL, then use HTTPS.
+   Choose PHP 8.3 or newer in MultiPHP Manager (application minimum 8.1),
+   with PDO, pdo_mysql, session and fileinfo. Ask the host to enable Apache
+   mod_rewrite and AllowOverride if needed. Require MySQL >= 8.0.16, or
+   MariaDB >= 10.6. The installer checks the actual server version.
+
+2. In cPanel's MySQL Databases/Manage My Databases (or Database Wizard),
+   create a NEW EMPTY database and user. Assign that user ALL PRIVILEGES
+   on that database only. Record the FULL account-prefixed names and the
+   host supplied by your hosting company (often localhost). Do not put
+   the password in Git, URLs, chat, or command-line arguments.
+
+3. Review and manually commit/push the intended project changes to GitHub,
+   including .cpanel.yml and all installer files. These changes have NOT
+   been committed or pushed automatically. Never include .env or storage/.
+   For a private GitHub repository, use a read-only SSH deploy key following
+   cPanel's private-repository guide; do not embed a token in a clone URL.
+
+4. cPanel > Files > Git Version Control > Create: clone your GitHub
+   repository to a PRIVATE path such as /home/ACCOUNT/repositories/aerobook,
+   outside all document roots. Use the intended branch and a clean checkout.
+   Ensure /usr/bin/rsync exists (ask your host if unavailable).
+   Manage > Pull or Deploy > Update from Remote > Deploy HEAD Commit.
+   Check the deployment output. Default target is /home/ACCOUNT/public_html.
+   The target must already exist. A failed deployment must be resolved
+   before continuing; file-by-file sync is not an atomic release.
+
+5. Before entering ANY credentials in the installer, confirm over HTTPS
+   that /.env, /config/bootstrap.php, /database/schema.sql, and /storage/
+   are denied (403/404). If using public/ as document root, these paths
+   should likewise be inaccessible. If any private file is served, stop
+   and have the host fix the document root/Apache protections first.
+
+6. Activate installation using cPanel Terminal (trusted CLI, never browser).
+   For the default deployment run the following command. If DEPLOYPATH
+   was changed, replace the path expression with that absolute app root,
+   NOT its public/ directory. Ensure the CLI PHP is the selected PHP version
+   (your host can supply the correct binary, e.g. an ea-php83 PHP path).
+
+   php -r '$root = getenv("HOME")."/public_html"; if (file_exists($root."/.env") || file_exists($root."/storage/.installed")) { exit("Installation is already disabled.\n"); } umask(0077); if (!is_dir($root."/storage") && !mkdir($root."/storage",0700)) { exit("Cannot create storage.\n"); } $token=bin2hex(random_bytes(32)); $file=fopen($root."/storage/.setup-token","x"); if (!$file) { exit("Activation already exists; remove it from File Manager to rotate it.\n"); } if (fwrite($file,hash("sha256",$token)) !== 64) { fclose($file); unlink($root."/storage/.setup-token"); exit("Cannot save activation.\n"); } fclose($file); echo "One-time setup token: ".$token."\n";'
+
+   Only a SHA-256 hash is stored in storage/.setup-token; copy the printed
+   64-character token privately. Storage is ignored by Git and deployment.
+   If Terminal is unavailable, run php -r locally to generate both values:
+
+   php -r '$t=bin2hex(random_bytes(32)); echo "Token: ".$t."\nHash: ".hash("sha256",$t)."\n";'
+
+   With cPanel File Manager, create storage/ in the DEPLOYPATH app root
+   (permission 0700), and its .setup-token file (permission 0600) containing
+   ONLY the generated 64-character HASH. Use the TOKEN in the browser.
+   Enable Show Hidden Files in File Manager. Never place this file inside
+   public/, uploads/, the Git repository, or a publicly readable folder.
+
+7. Open https://YOUR-DOMAIN/setup.php. Paste the token to unlock setup.
+   Confirm all server checks pass. Enter the HTTPS domain URL, full database
+   names and password, and your own administrator name/email/password.
+   Use a unique admin password (12-72 bytes). Click Install AeroBook.
+   Passwords are never repopulated in the form. The authorized session
+   expires after 15 minutes. Setup does not trust proxy headers; if your
+   host terminates TLS at a proxy it must set HTTPS correctly in PHP.
+
+8. On success, setup creates the exact current ten-table schema, one active
+   administrator with a password hash, private payment-proof storage,
+   production .env (APP_DEBUG=false), and storage/.installed. It removes
+   the activation token. Sign in at /admin/login, then add airlines,
+   airports, flights and seats. Demo seed.sql is deliberately not imported.
+   Both an existing .env AND the installation marker independently prevent
+   any later setup run, even after code is redeployed.
+
+9. Delete both root setup.php and public/setup.php from the hosting account
+   as extra protection. They may return after a later deployment, but the
+   persistent .env/installation lock will still block access. Keep .env
+   and storage/.installed. Verify .env is 0600, storage is 0700, and normal
+   code files/directories are 0644/0755. Never use 0777. For hosts using a
+   separate PHP user, ask the host for appropriate owner/group permissions.
+   Test admin login, flight search, booking, seats, payments and tickets.
+   Keep backups of BOTH MySQL and storage/payment-proofs plus the private
+   configuration. Increase upload limits via cPanel PHP settings if needed.
+
+Updates and existing installations
+----------------------------------
+Manually publish reviewed updates to GitHub. In cPanel, use Update from
+Remote then Deploy HEAD Commit, inspect its result, and smoke-test the app.
+Production .env, all storage (including token/lock/proofs), and public/uploads
+are never synchronized. The installer never runs automatically on deployment.
+Do not use it to migrate or reset an existing installation. Existing tables
+or views are refused without writes; existing .env blocks setup entirely.
+For an existing project, configure/retain production .env manually using
+.env.example as a template, with APP_ENV=production, APP_DEBUG=false and
+the HTTPS APP_URL. Restore production data and apply reviewed migrations
+separately. No application business logic or schema has been changed.
+
+Failure recovery (no automatic deletion)
+----------------------------------------
+MySQL CREATE TABLE implicitly commits. A failed import may leave some new
+tables, and a filesystem failure after import may leave a complete database
+without configuration. The installer does not roll back DDL or delete tables.
+Inspect the fresh installation database in phpMyAdmin. Prefer selecting a
+different new EMPTY database and retrying after fixing permissions/access.
+Never drop a database or tables containing existing business data.
+
+If all ten tables and the new admin account are present, retain them and
+finish configuration manually: create .env from .env.example with your
+production credentials (0600), set APP_ENV=production and APP_DEBUG=false,
+set the HTTPS APP_URL, create storage/.installed with a timestamp, and remove
+storage/.setup-token. If .env was partly written, repair it in File Manager;
+setup deliberately will not overwrite it. Preserve the installation marker.
+If you abandon a never-completed fresh install, remove its activation file
+and unused write-probe files only after inspecting their state. Back up first.
+
+Official references
+-------------------
+https://docs.cpanel.net/knowledge-base/web-services/guide-to-git-set-up-deployment/
+https://docs.cpanel.net/knowledge-base/web-services/guide-to-git-set-up-access-to-private-repositories/
+https://dev.mysql.com/doc/refman/8.4/en/implicit-commit.html

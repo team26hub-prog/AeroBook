@@ -53,6 +53,18 @@ final class FlightSearch extends Model
         return $statement->fetchAll();
     }
 
+    public function departingFrom(int $departureId): array
+    {
+        $sql=$this->baseSelect()." WHERE f.departure_airport_id=:departure AND f.departure_at>=NOW()
+            AND f.status IN ('scheduled','boarding') AND da.status='active' AND aa.status='active' AND al.status='active'
+            AND (SELECT COUNT(*) FROM seats s WHERE s.flight_id=f.id AND s.status='available'
+                 AND NOT EXISTS(SELECT 1 FROM booking_seats bs WHERE bs.seat_id=s.id))>0
+            ORDER BY f.departure_at ASC,f.id ASC";
+        $statement=$this->db->prepare($sql);
+        $statement->execute(['departure'=>$departureId]);
+        return $statement->fetchAll();
+    }
+
     public function findAvailable(int $id): ?array
     {
         $flight=$this->findUpcoming($id);

@@ -11,6 +11,25 @@ $adminPages=['/admin','/admin/airlines','/admin/airports','/admin/flights','/adm
 $customerPosts=['/bookings/cancel','/flights/select','/booking/review','/booking/create','/seat-selection/save','/payments/submit'];
 $redirect=static function(array $response,string $location):void{equal($response['status'],303);equal($response['headers']['location']??null,$location);};
 $client=fn()=>new TestClient($server->url);
+$suite->add('functional: airport-first search, departure browsing and unchanged route/date form',function()use($client,$environment){
+    $c=$client();$c->login();
+    $body=$c->request('/flights')['body'];
+    expect(!str_contains($body,'data-flight-id='),'Default search must not list flights');
+    equal(substr_count($body,'class="flight-airport-card"'),3);
+    expect(str_contains($body,'href="/flights?departure_id=1#airport-departures"'));
+    $body=$c->request('/flights?departure_id=1')['body'];
+    expect(str_contains($body,'data-flight-id="1"')&&str_contains($body,'data-flight-id="2"'));
+    expect(str_contains($body,'<option value="1" selected>'),'Departure should be preselected');
+    expect(!str_contains($body,'Choose a destination airport.'),'Airport browsing should not require destination or date');
+    $date=substr($environment->scalar('SELECT departure_at FROM flights WHERE id=1'),0,10);
+    $body=$c->request('/flights?departure_id=1&arrival_id=2&date='.$date)['body'];
+    expect(str_contains($body,'data-flight-id="1"'));
+    expect(str_contains($body,'action="/flights"')&&str_contains($body,'name="arrival_id" required')&&str_contains($body,'name="date"'));
+    $body=$c->request('/flights?departure_id=2')['body'];expect(str_contains($body,'No available departures'));
+    foreach(['/flights?departure_id=invalid','/flights?departure_id[]=1','/flights?departure_id=1&arrival_id=1&date='.$date] as $url){
+        expect(!str_contains($c->request($url)['body'],'data-flight-id='),'Invalid filters must not show flights');
+    }
+});
 foreach(array_merge($customerPages,$adminPages,['/flights?seat_counts=1&ids=1','/admin?dashboard_data=1']) as $path)$suite->add('security: guest blocked '.$path,function()use($client,$path,$redirect){$redirect($client()->request($path),'/login');});
 foreach(array_merge($customerPosts,['/admin/action','/admin/logout']) as $path)$suite->add('security: guest cannot POST '.$path,function()use($client,$path,$redirect){$redirect($client()->request($path,[],'POST'),'/login');});
 foreach($adminPages as $path)$suite->add('security: customer cannot access '.$path,function()use($client,$path){$c=$client();$c->login();equal($c->request($path)['status'],403);});

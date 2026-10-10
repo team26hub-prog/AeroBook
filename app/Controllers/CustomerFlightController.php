@@ -29,8 +29,12 @@ final class CustomerFlightController extends Controller
             return;
         }
         $errors=Session::pullFlash('errors',[]);$results=null;$departure=is_scalar($_GET['departure_id']??null)?(string)$_GET['departure_id']:'';$arrival=is_scalar($_GET['arrival_id']??null)?(string)$_GET['arrival_id']:'';$date=is_scalar($_GET['date']??null)?(string)$_GET['date']:'';
-        $hasSearch=$_GET!==[];$flightsUnavailable=false;
-        if($hasSearch){
+        $hasSearch=isset($_GET['departure_id'])||isset($_GET['arrival_id'])||isset($_GET['date']);$flightsUnavailable=false;
+        $airportBrowse=isset($_GET['departure_id'])&&!array_key_exists('arrival_id',$_GET)&&!array_key_exists('date',$_GET);
+        if($airportBrowse){
+            if(filter_var($departure,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])===false)$errors[]='Choose a departure airport.';
+            if($errors===[]){try{$results=$this->flights->departingFrom((int)$departure);}catch(\Throwable $e){error_log('Airport departure search error: '.$e->getMessage());$flightsUnavailable=true;$errors[]='Flight search is temporarily unavailable.';}}
+        }elseif($hasSearch){
             if(filter_var($departure,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])===false)$errors[]='Choose a departure airport.';
             if(filter_var($arrival,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])===false)$errors[]='Choose a destination airport.';
             if($departure!==''&&$arrival!==''&&$departure===$arrival)$errors[]='Departure and destination must be different airports.';
@@ -38,9 +42,6 @@ final class CustomerFlightController extends Controller
             if(!$parsed||($dateErrors!==false&&($dateErrors['warning_count']||$dateErrors['error_count']))||$parsed->format('Y-m-d')!==$date)$errors[]='Choose a valid travel date.';
             elseif($date<date('Y-m-d'))$errors[]='Travel date cannot be in the past.';
             if($errors===[]){try{$results=$this->flights->search((int)$departure,(int)$arrival,$date);}catch(\Throwable $e){error_log('Flight search query error: '.$e->getMessage());$flightsUnavailable=true;$errors[]='Flight search is temporarily unavailable.';}}
-        }else{
-            try{$results=$this->flights->allAvailable();}
-            catch(\Throwable $e){error_log('Available flight list error: '.$e->getMessage());$flightsUnavailable=true;$errors[]='Available flights are temporarily unavailable. Please refresh and try again.';}
         }
         try{$airports=$this->flights->airports();}catch(\Throwable $e){error_log('Flight search airport error: '.$e->getMessage());http_response_code(500);$airports=[];$errors[]='Flight search is temporarily unavailable.';}
         $this->view('flights/search',['title'=>'Search Flights','activeSection'=>'search','userName'=>Auth::name(),'airports'=>$airports,'results'=>$results,'hasSearch'=>$hasSearch,'flightsUnavailable'=>$flightsUnavailable,'errors'=>$errors,'filters'=>['departure_id'=>$departure,'arrival_id'=>$arrival,'date'=>$date],'csrf'=>Csrf::token()]);

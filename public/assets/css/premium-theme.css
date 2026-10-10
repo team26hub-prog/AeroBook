@@ -1,0 +1,68 @@
+/* Shared presentation layer. Sidebar selectors and their existing colours are intentionally untouched. */
+body{
+    --aero-cyan:#00A8CC;--aero-teal:#0D9488;--aero-cyan-dark:#00758f;--aero-teal-dark:#08756d;
+    --blue:var(--aero-cyan-dark);--success:var(--aero-teal-dark);--background:#edf4f6;
+    --customer-blue:var(--aero-cyan-dark);--customer-muted:#536c7c;--customer-line:#d8e5e9;--customer-bg:#edf4f6;
+    --flight-blue:var(--aero-cyan-dark);--flight-muted:#536c7c;--flight-line:#d8e5e9;--flight-bg:#edf4f6;
+    --admin-blue:var(--aero-cyan-dark);--admin-green:var(--aero-teal-dark);--admin-muted:#536c7c;--admin-line:#d8e5e9;--admin-bg:#edf4f6;
+    background:#edf4f6;
+    -webkit-font-smoothing:antialiased;
+}
+body :is(.customer-content,.admin-content){--customer-gutter:clamp(16px,2.5vw,30px);--admin-gutter:clamp(18px,2.5vw,30px);--admin-section-gap:16px;--admin-card-padding:20px}
+body .customer-app .customer-content{padding-top:24px;padding-bottom:36px;max-width:1320px}
+body .admin-content{padding-top:22px;padding-bottom:36px}
+body :is(.customer-topbar,.admin-header){background:#fafdfe;border-bottom:1px solid #cfe3e8;box-shadow:0 3px 12px #143c5306}
+body .customer-topbar{min-height:68px}
+body .customer-top-title{margin-left:0;padding-left:0;border-left:0}
+body :is(.customer-top-title>span,.admin-header-title>p){color:var(--aero-teal-dark)}
+body :is(.customer-primary,.flight-button,.booking-button,.payment-button,.seat-button,.admin-button,.small-button,.button){
+    background:linear-gradient(110deg,#007d98,#087d73);border-color:transparent;border-radius:8px;color:#fff;box-shadow:0 3px 9px #08756d1c;
+    transition:background .15s ease,box-shadow .15s ease;
+}
+body :is(.customer-primary,.flight-button,.booking-button,.payment-button,.seat-button,.admin-button,.small-button,.button):hover{background:#075d63;color:#fff;box-shadow:0 4px 12px #08756d30}
+body :is(.admin-button,.small-button).reject{background:#a5464c;color:#fff}
+body :is(.admin-button,.small-button).verify{background:var(--aero-teal-dark);color:#fff}
+body :is(.customer-primary,.flight-button,.booking-button,.payment-button,.seat-button,.admin-button,.small-button,.button):disabled{background:#637987;box-shadow:none;cursor:not-allowed}
+body .customer-auth-links a{color:var(--aero-cyan-dark)}
+body .customer-auth-links a:last-child{background:var(--aero-teal-dark);color:#fff}
+/* Consistent top navigation colours across customer, admin and sign-in pages. */
+body :is(.site-header,.customer-topbar,.admin-header),body .site-header.auth-topbar{background:#0D9488;color:#fff}
+body .site-header :is(.brand,.header-note),
+body .customer-topbar :is(.customer-top-title>span,.customer-top-title>strong,.customer-greeting,.customer-top-brand,.customer-auth-links a),
+body .admin-header :is(.admin-header-title>p,.admin-header-title>h1,.admin-header-nav a,.admin-header-nav time){color:#fff}
+body .customer-topbar .customer-auth-links a:last-child{background:#08756d;color:#fff}
+body .admin-header .admin-header-nav a:hover,
+body .admin-header .admin-header-nav a[aria-current=page]{background:#08756d;color:#fff}
+body .customer-topbar .customer-menu-toggle,
+body .admin-header .admin-menu-toggle{background:transparent;border-color:#ffffff80;color:#fff}
+body :is(.site-header,.customer-topbar,.admin-header) :is(a,button):focus-visible{outline:3px solid #fff;outline-offset:3px}
+body :is(.customer-placeholder,.customer-booking-card,.flight-panel,.detail-card,.available-flight-card,.booking-form,.booking-flight-summary,.review-passengers,.booking-total,.confirmation-reference,.payment-card,.payment-booking-card,.payment-history-card,.seat-panel,.ticket-card,.profile-card,.admin-card,.stat-card){border-color:#d8e5e9;border-radius:12px;box-shadow:0 5px 18px #143c5307}
+body .customer-content :is(.flight-panel,.detail-card,.booking-form,.payment-card,.profile-card){border-top:3px solid var(--aero-cyan);padding:20px}
+body .customer-content :is(.flight-heading,.booking-heading,.seat-heading,.payment-heading,.ticket-heading){margin-bottom:16px}
+body :is(.customer-content,.admin-content) :is(h1,h2){letter-spacing:-.03em}
+body .available-flight-card{border-top:3px solid var(--aero-cyan);padding:20px;background:linear-gradient(150deg,#fff 70%,#effaf9)}
+body .available-flight-availability{background:#e2f5ef;color:var(--aero-teal-dark)}
+body .available-flight-card.flight-sold-out .available-flight-availability{background:#fae9e9;color:#914148}
+body :is(.customer-content,.admin-content,.auth-card) :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),select,textarea){border-color:#c6dce2;border-radius:7px}
+body :is(.customer-content,.admin-content,.auth-card) :is(input,select,textarea):focus{border-color:var(--aero-cyan);outline:3px solid #00a8cc25;outline-offset:1px}
+body :is(.customer-content,.admin-content,.auth-card,.mobile-bottom-nav) :is(a,button,summary):focus-visible{outline:3px solid var(--aero-cyan);outline-offset:4px}
+body .admin-section-dashboard .stat-card{--card-accent:var(--aero-cyan);min-height:112px;padding:17px;border-radius:10px;gap:9px;background:linear-gradient(140deg,#eff9fb,#fff 70%)}
+body .admin-section-dashboard .stat-card:nth-child(even){--card-accent:var(--aero-teal)}
+body .admin-section-dashboard .stat-card small{color:var(--aero-teal-dark)}
+body .admin-section-dashboard .revenue-card{border-left-color:var(--aero-teal);background:linear-gradient(110deg,#e5f5f2,#fff)}
+body .admin-section-dashboard .dashboard-card-icon{background:#e8f7f7;color:var(--aero-teal-dark);border-color:#cde5e7;border-radius:8px}
+body .admin-section-dashboard .dashboard-chart-card{border-top-color:var(--aero-cyan);border-radius:10px}
+body .admin-section-dashboard .dashboard-chart-card[data-dashboard-chart=revenue]{border-top-color:var(--aero-teal)}
+body .admin-content th{background:#f0f8fa;color:#365e70}body .admin-content tbody tr:hover{background:#f5fbfc}
+body .auth-card{border-top:4px solid var(--aero-cyan);border-radius:16px;box-shadow:0 18px 55px #143c5314}
+body .auth-card h1{letter-spacing:-.04em}body .auth-card .eyebrow{color:var(--aero-teal-dark)}
+@media screen and (max-width:820px){
+    body .customer-app .customer-content{padding-top:18px;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+    body .admin-content{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+    body .mobile-bottom-nav{border-top:1px solid #cfe3e8;background:#fafdfe}
+    body .mobile-bottom-nav a{color:var(--aero-cyan-dark)}
+    body .mobile-bottom-nav a[aria-current=page]{color:var(--aero-teal-dark);background:#e0f3f0}
+}
+@media(max-width:560px){body .customer-content :is(.flight-panel,.detail-card,.booking-form,.payment-card,.profile-card){padding:16px}body .customer-app .customer-content{--customer-gutter:14px}}
+@media(prefers-reduced-motion:reduce){body :is(.customer-primary,.flight-button,.booking-button,.payment-button,.seat-button,.admin-button,.small-button,.button){transition:none}}
+@media print{body{background:#fff}body .customer-app .customer-content,body .admin-content{padding:0!important}body :is(.ticket-card,.booking-flight-summary,.confirmation-reference){box-shadow:none}}
