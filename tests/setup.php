@@ -206,7 +206,9 @@ $suite->add('setup HTTP: authenticated installer completes and permanently locks
     $admin = $db->query('SELECT * FROM users')->fetch();
     equal($admin['role'], 'admin'); equal($admin['status'], 'active'); equal($admin['email'], 'admin@example.test');
     expect(password_verify($input['admin_password'], $admin['password_hash']));
-    equal((int) $db->query('SELECT COUNT(*) FROM flights')->fetchColumn(), 0);
+    equal((int) $db->query('SELECT COUNT(*) FROM flights')->fetchColumn(), 115);
+    equal((int) $db->query('SELECT COUNT(*) FROM airports')->fetchColumn(), 4);
+    equal((int) $db->query('SELECT COUNT(*) FROM seats')->fetchColumn(), 6900);
     equal($request()['status'], 410);
     equal($request('/public/setup.php')['status'], 410);
     // Redeployed code or a newly generated token cannot bypass either durable guard.

@@ -12,7 +12,7 @@ AeroBook is an online airline ticketing system built with core PHP, MySQL, PDO, 
 
 1. Copy `.env.example` to `.env` and set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` for your local MySQL instance.
 2. Create the database named in `DB_DATABASE` using `utf8mb4` / `utf8mb4_unicode_ci`.
-3. Select that database, then import `database/schema.sql` followed by `database/seed.sql`.
+3. Select that database, then import **only `database/schema.sql`**. It includes the ten tables, initial airline, four airports, 115 distinct flights, and 6,900 seats in dependency order. Re-imports add missing seed records without overwriting existing records, bookings or seat statuses. Separate seed/additional-flight files are no longer needed.
 4. Configure the web server document root to the project's `public/` directory. For a Laragon virtual host pointed at the project root, the root `.htaccess` forwards requests into `public/` instead.
 
 The front controller loads environment configuration from `.env`. Point the web server at `public/` so application code and local environment files stay outside the document root. The root `.htaccess` also disables directory listings and blocks direct access to the private source/configuration folders when the Laragon virtual host uses the project root.

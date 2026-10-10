@@ -57,13 +57,21 @@ final class AeroBookInstaller
         if ($sql === false) {
             throw new DomainException('The database schema could not be read. Deploy the complete application.');
         }
+        $sql = preg_replace('/^[\t ]*--[^\r\n]*(?:\r?\n|$)/m', '', $sql);
         $statements = array_values(array_filter(array_map('trim', explode(';', $sql)), static fn ($s) => $s !== ''));
         $expected = ['users', 'airlines', 'airports', 'flights', 'bookings', 'passengers', 'seats', 'booking_seats', 'payments', 'e_tickets'];
-        if (count($statements) !== count($expected)) {
+        if (count($statements) !== count($expected) + 6) {
             throw new DomainException('The database schema is not the expected AeroBook schema.');
         }
-        foreach ($statements as $index => $statement) {
-            if (!preg_match('/\ACREATE TABLE ' . $expected[$index] . '\s*\(/', $statement)) {
+        foreach ($expected as $index => $table) {
+            if (!preg_match('/\ACREATE TABLE IF NOT EXISTS ' . $table . '\s*\(/', $statements[$index])) {
+                throw new DomainException('The database schema is not the expected AeroBook schema.');
+            }
+        }
+        // Accept only the fixed, local reference-data section after the ten tables.
+        $dataPatterns = ['/\ASTART TRANSACTION\z/', '/\AINSERT INTO airlines\s*\(/', '/\AINSERT INTO airports\s*\(/', '/\AINSERT INTO flights\s*\(/', '/\AINSERT INTO seats\s*\(/', '/\ACOMMIT\z/'];
+        foreach ($dataPatterns as $index => $pattern) {
+            if (!preg_match($pattern, $statements[count($expected) + $index])) {
                 throw new DomainException('The database schema is not the expected AeroBook schema.');
             }
         }

@@ -23,7 +23,8 @@ The deployment allowlist copies app/, config/bootstrap.php,
 config/installer.php, database/schema.sql, public/index.php, public/.htaccess,
 public/setup.php, public/assets/,
 the root .htaccess and setup.php. It does not import SQL, copy .env or storage,
-or use --delete. Tests, Git data, example/local credentials, demo seeds,
+or use --delete. schema.sql now includes reference data and initial schedules.
+Tests, Git data, example/local credentials, separate seed files,
 migrations and documentation are not deployed. Apply future migrations
 manually after review and a database backup. Files removed from Git remain
 on the server: remove obsolete code deliberately after reviewing it.
@@ -95,10 +96,11 @@ First installation
    host terminates TLS at a proxy it must set HTTPS correctly in PHP.
 
 8. On success, setup creates the exact current ten-table schema, one active
-   administrator with a password hash, private payment-proof storage,
+   administrator with a password hash, one airline, four airports, 115 flights,
+   6,900 seats, private payment-proof storage,
    production .env (APP_DEBUG=false), and storage/.installed. It removes
    the activation token. Sign in at /admin/login, then add airlines,
-   airports, flights and seats. Demo seed.sql is deliberately not imported.
+   or update airports, flights and seats. All initial data comes from schema.sql.
    Both an existing .env AND the installation marker independently prevent
    any later setup run, even after code is redeployed.
 

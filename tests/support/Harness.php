@@ -42,6 +42,8 @@ final class TestEnvironment{
         $this->db=new PDO($dsn.';dbname='.$this->name,$this->env['DB_USERNAME']??'',$this->env['DB_PASSWORD']??'',$options);
         $this->db->exec('SET time_zone='.$this->db->quote((new DateTimeImmutable())->format('P')));
         $this->db->exec(file_get_contents(BASE_PATH.'/database/schema.sql'));
+        // The unified import includes sample schedules. Tests establish their own fixtures.
+        $this->clear();
         $GLOBALS['config']=['app'=>['name'=>'AeroBook','environment'=>'testing','debug'=>false,'base_url'=>'http://127.0.0.1','timezone'=>date_default_timezone_get()]];
         (new ReflectionProperty(App\Core\Database::class,'connection'))->setValue(null,$this->db);
         if(session_status()!==PHP_SESSION_ACTIVE){ini_set('session.save_path',$this->runtime);App\Core\Session::start();}

@@ -175,7 +175,7 @@ header('Content-Type: text/html; charset=utf-8');
 <h1>Install AeroBook</h1>
 <?php if ($success): ?>
 <p class="notice ok" role="status">Installation complete. Setup is permanently locked.</p>
-<p>Your database schema and administrator account are ready. No demo data was imported. Sign in and add airlines, airports, flights, and seats from the admin panel.</p>
+<p>Your database schema, initial airline, airports, flight schedules, seats, and administrator account are ready. Sign in to review and manage schedules from the admin panel.</p>
 <p><a href="<?= $escape($values['url'] . '/admin/login') ?>">Sign in as administrator</a></p>
 <p>Delete both setup.php entry points from the hosting account as an extra precaution. Keep the installation lock and .env.</p>
 <?php else: ?>
