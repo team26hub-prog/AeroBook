@@ -81,5 +81,22 @@ $suite->add('regression: airport departures span dates and destinations and excl
     $db->exec("UPDATE airports SET status='inactive' WHERE id=3");
     equal($flights->departingFrom(1),[]);
 });
+$suite->add('regression: departure cutoff explains unavailable cancellation and retains issued tickets',function()use($environment,$admin,$bookings,$tickets,$db){
+    $booking=$environment->booking();
+    $environment->assign($booking);
+    $admin->reviewPayment($environment->submitted($booking),'verified');
+    $upcoming=$bookings->listForCustomer(1)[0];
+    equal((int)$upcoming['can_cancel'],1);
+    equal((int)$upcoming['departure_time_passed'],0);
+    $ticketRecords=$tickets->forCustomer(1);
+    $db->exec('UPDATE flights SET departure_at=NOW(),arrival_at=DATE_ADD(NOW(),INTERVAL 2 HOUR) WHERE id=1');
+    $departed=$bookings->listForCustomer(1)[0];
+    equal((int)$departed['can_cancel'],0);
+    equal((int)$departed['departure_time_passed'],1);
+    equal($departed['status'],'confirmed');
+    rejects(fn()=> $bookings->cancelForCustomer($booking['id'],1));
+    equal(array_column($tickets->forCustomer(1),'ticket_number'),array_column($ticketRecords,'ticket_number'));
+    equal(array_column($tickets->forCustomer(1),'ticket_status'),array_column($ticketRecords,'ticket_status'));
+});
 $failures=$suite->run(fn()=> $environment->reset());
 $environment->cleanup();session_write_close();$output=ob_get_clean();echo $output;exit($failures?1:0);

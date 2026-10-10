@@ -1,4 +1,6 @@
 /* Shared presentation layer. Sidebar selectors and their existing colours are intentionally untouched. */
+/* Keep every link free of underlines, including module hover/focus styles. */
+body a,body a *{text-decoration:none!important}
 body{
     --aero-cyan:#00A8CC;--aero-teal:#0D9488;--aero-cyan-dark:#00758f;--aero-teal-dark:#08756d;
     --blue:var(--aero-cyan-dark);--success:var(--aero-teal-dark);--background:#edf4f6;

@@ -14,13 +14,15 @@
 @media screen and (max-width:720px){.ticket-details{grid-template-columns:repeat(2,minmax(0,1fr))}.e-ticket-header{padding:18px;gap:12px}.ticket-logo{width:52px;height:52px;flex-basis:52px}.ticket-brand{font-size:1.35rem}.ticket-brand-lockup{gap:10px}}
 @media screen and (max-width:500px){.e-ticket-header{flex-direction:column;align-items:stretch;padding:16px}.ticket-header-actions{justify-content:space-between}.ticket-route{gap:10px;padding:20px 16px;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr)}.ticket-route strong{font-size:2rem}.ticket-route small{font-size:.75rem}.ticket-details{gap:18px 12px;padding:20px 16px}.ticket-reference-panel{grid-template-columns:minmax(0,1fr);gap:20px;padding:20px 16px}.ticket-qr{justify-self:center}.ticket-footer{padding:16px}.ticket-details strong{font-size:.82rem}}
 @media print{
- @page{size:A4 portrait;margin:12mm}
+ /* Remove the page margin reserved for browser headers/footers; keep the
+    ticket inset inside the page instead. */
+ @page{size:A4 portrait;margin:0}
  html,body{width:auto!important;min-width:0!important;height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important;color:#183251!important;font-size:10pt!important}
  .site-header,.site-footer,.customer-topbar,.customer-sidebar,.customer-backdrop,.customer-menu-toggle,.customer-sidebar-close,.ticket-page-heading,.ticket-print-button,.swal2-container,.mobile-bottom-nav,.page-back-row,.customer-content>.customer-notice,.customer-content>.alert{display:none!important}
  .customer-app,.customer-layout,.customer-content,.page-main{display:block!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important}
  .ticket-page,.ticket-list{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
  body.ticket-print-active .e-ticket:not(.ticket-print-target){display:none!important}
- .e-ticket{display:flex!important;flex-direction:column;width:100%!important;min-height:240mm;margin:0!important;overflow:visible!important;border:1px solid #bfced8!important;border-radius:0!important;box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always}
+ .e-ticket{display:flex!important;flex-direction:column;box-sizing:border-box;width:calc(100% - 24mm)!important;min-height:240mm;margin:12mm!important;overflow:visible!important;border:1px solid #bfced8!important;border-radius:0!important;box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always}
  .e-ticket:last-child,body.ticket-print-active .ticket-print-target{break-after:auto;page-break-after:auto}
  .e-ticket-header{padding:5mm!important;gap:5mm!important}.ticket-logo{flex-basis:20mm;width:20mm;height:20mm}.ticket-brand{font-size:22pt}.ticket-brand small{font-size:8pt}.e-ticket-header p{font-size:10pt}.ticket-header-actions{display:block!important}.ticket-state{font-size:9pt}
  .ticket-route{grid-template-columns:minmax(0,1fr) 12mm minmax(0,1fr);gap:5mm;padding:5mm 7mm}.ticket-route strong{font-size:34pt}.ticket-route small{font-size:9pt}.ticket-route>div>span{font-size:8pt}

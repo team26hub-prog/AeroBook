@@ -15,12 +15,12 @@ $homeAirports = [
         <img class="aero-hero-image" src="/assets/images/airplane.jpg" alt="Passenger airplane flying overhead in a clear blue sky" width="1280" height="915" fetchpriority="high">
         <div class="aero-hero-copy">
             <p class="aero-kicker"><span aria-hidden="true"></span> A world of possibilities</p>
-            <h1 id="hero-heading">Your next chapter<br>starts in the sky.</h1>
+            <h1 id="hero-heading">Your next chapter starts in the sky.</h1>
             <p>From a quick getaway to a long-awaited reunion. Find your flight, choose your seat, and make the journey yours.</p>
             <div class="aero-hero-actions"><a class="customer-primary" href="/flights">Search flights <span aria-hidden="true">&nearr;</span></a><a class="aero-hero-link" href="/account?section=bookings">My bookings <span aria-hidden="true">&rarr;</span></a></div>
             <div class="aero-hero-note"><span aria-hidden="true">&#10003;</span> Flight search <span aria-hidden="true">&middot;</span> Seat selection <span aria-hidden="true">&middot;</span> Digital tickets</div>
+            <span class="aero-hero-caption">AeroBook / Make your way</span>
         </div>
-        <span class="aero-hero-caption">AeroBook / Make your way</span>
     </section>
 
     <nav class="aero-journey-bar" aria-label="Travel shortcuts">

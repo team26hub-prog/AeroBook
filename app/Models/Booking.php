@@ -52,7 +52,8 @@ final class Booking extends Model
             da.iata_code departure_code,da.city departure_city,aa.iata_code arrival_code,aa.city arrival_city,
             (SELECT COUNT(*) FROM passengers p WHERE p.booking_id=b.id) passenger_count,
             (SELECT py.status FROM payments py WHERE py.booking_id=b.id ORDER BY py.id DESC LIMIT 1) payment_status,
-            (b.status IN ('pending','confirmed') AND f.departure_at>NOW()) can_cancel
+            (b.status IN ('pending','confirmed') AND f.departure_at>NOW()) can_cancel,
+            (f.departure_at<=NOW()) departure_time_passed
             FROM bookings b JOIN flights f ON f.id=b.flight_id JOIN airlines al ON al.id=f.airline_id
             JOIN airports da ON da.id=f.departure_airport_id JOIN airports aa ON aa.id=f.arrival_airport_id
             WHERE b.user_id=? ORDER BY b.created_at DESC");
