@@ -1,6 +1,4 @@
--- AeroBook unified import: tables, reference data, flights, then seats.
--- Select the intended database before import. No existing rows are updated or deleted.
--- Re-importing adds only missing reference records, scheduled services and seats.
+SET FOREIGN_KEY_CHECKS=0;
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -585,3 +583,5 @@ WHERE al.iata_code = 'AB'
   AND (layout.cabin_class = 'economy' OR letters.seat_letter IN ('A', 'B', 'C', 'D'));
 
 COMMIT;
+
+SET FOREIGN_KEY_CHECKS=1;
