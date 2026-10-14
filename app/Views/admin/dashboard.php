@@ -1,18 +1,5 @@
 <?php declare(strict_types=1); ?>
 <link rel="stylesheet" href="/assets/css/admin-dashboard.css">
-<form class="admin-dashboard-search" method="get" action="/admin/bookings" role="search">
-    <label for="admin-find-booking">Find a booking<input type="search" id="admin-find-booking" name="q" placeholder="Booking reference, customer, or flight number" required></label>
-    <button class="admin-button" type="submit">Find booking</button>
-</form>
-<details class="admin-getting-started" <?= (int)$stats['flights']===0 ? 'open' : '' ?>>
-    <summary>New to AeroBook? Set up your first bookable flight</summary>
-    <ol>
-        <li><a href="/admin/airlines#admin-create">Add an airline</a><span>Use its name and official airline codes.</span></li>
-        <li><a href="/admin/airports#admin-create">Add departure and arrival airports</a><span>You need two different active airports.</span></li>
-        <li><a href="/admin/flights#admin-create">Schedule the flight</a><span>Choose its route, times, and fare.</span></li>
-        <li><a href="/admin/seats#admin-create">Create its seat layout</a><span>Seats give customers capacity to book.</span></li>
-    </ol>
-</details>
 <section class="admin-priority" aria-labelledby="priority-heading">
     <span class="admin-priority-icon" aria-hidden="true"><?= $menuIcon('payments') ?></span>
     <div><p class="admin-eyebrow">Next up</p><h2 id="priority-heading"><?= (int)$stats['pending_payments'] ?> payment<?= (int)$stats['pending_payments']===1?'':'s' ?> awaiting review</h2><p><?= (int)$stats['pending_payments']>0?'Verify submitted payments to confirm bookings and issue e-tickets.':'You are caught up on payment reviews. Explore bookings or schedule your next flight.' ?></p></div>

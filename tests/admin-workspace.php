@@ -26,7 +26,17 @@ foreach(['dashboard','airlines','airports','flights','seats','bookings','payment
     $xpath=uiDocument($html);
     check(str_contains($html,'/assets/js/admin-workspace.js'),'Admin enhancements missing: '.$section);
     check(str_contains($html,'/assets/js/admin-usability.js'),'Guided admin workflows missing: '.$section);
-    check(str_contains($html,'admin-workflow-help'),'Contextual help missing: '.$section);
+    check(str_contains($html,'/assets/js/admin-validation.js'),'Live admin field validation missing: '.$section);
+    if($section==='airports'){
+        $timezoneData=$xpath->query('//script[@id="admin-timezone-values"]')->item(0);
+        check($timezoneData!==null&&in_array('Asia/Karachi',json_decode($timezoneData->textContent,true)??[],true),'Server timezone choices missing from airport validation');
+    }
+    if($section==='dashboard'){
+        check(!str_contains($html,'admin-workflow-help')&&!str_contains($html,'admin-page-intro')&&!str_contains($html,'admin-dashboard-search')&&!str_contains($html,'admin-getting-started'),'Unnecessary overview introduction is still displayed');
+    }elseif($section==='flights'){
+        check(!str_contains($html,'admin-workflow-help'),'Flight schedules help should not be displayed');
+        check($xpath->query('//*[contains(@class,"admin-page-shortcuts")]/a[@href="/admin"]')->length===0,'Flight schedules overview shortcut should not be displayed');
+    }else check(str_contains($html,'admin-workflow-help'),'Contextual help missing: '.$section);
     if(in_array($section,['airlines','airports','flights','seats'],true)){
         check($xpath->query('//details[@id="admin-create"]')->length===1,'Create form is not collapsible: '.$section);
         check($xpath->query('//form[contains(@class,"admin-guided-form")]')->length===1,'Guided form missing: '.$section);

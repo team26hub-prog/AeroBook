@@ -1,6 +1,7 @@
 (() => {
-    document.querySelectorAll('.customer-app input[type="date"]').forEach((input, index) => {
-    const purpose = input.name.endsWith('[date_of_birth]') ? 'date of birth' : 'travel date';
+    document.querySelectorAll('.customer-app input[type="date"], .admin-section-flights input[type="datetime-local"]').forEach((input, index) => {
+    const withTime = input.type === 'datetime-local';
+    const purpose = withTime ? `${input.name === 'arrival_at' ? 'arrival' : 'departure'} date and time` : (input.name.endsWith('[date_of_birth]') ? 'date of birth' : 'travel date');
     const field = document.createElement('div');
     field.className = 'flight-date-field';
     input.before(field);
@@ -30,7 +31,10 @@
     const format = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const today = () => { const date = new Date(); date.setHours(0, 0, 0, 0); return date; };
     let month = today();
-    const allowed = date => (!input.min || format(date) >= input.min) && (!input.max || format(date) <= input.max);
+    let draftDate = '';
+    let hours = '12';
+    let minutes = '00';
+    const allowed = date => (!input.min || format(date) >= input.min.slice(0, 10)) && (!input.max || format(date) <= input.max.slice(0, 10));
     const close = (restoreFocus = false) => {
         panel.hidden = true;
         toggle.setAttribute('aria-expanded', 'false');
@@ -38,6 +42,7 @@
         if (restoreFocus) toggle.focus();
     };
     const select = date => {
+        if (withTime && date) { draftDate = format(date); render(); return; }
         input.value = date ? format(date) : '';
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -68,8 +73,8 @@
         monthChoice.value = String(month.getMonth());
         const yearChoice = document.createElement('select');
         yearChoice.setAttribute('aria-label', 'Calendar year');
-        const firstYear = parse(input.min)?.getFullYear() || 1000;
-        const lastYear = parse(input.max)?.getFullYear() || Math.max(today().getFullYear() + 100, month.getFullYear());
+        const firstYear = parse(input.min?.slice(0, 10))?.getFullYear() || 1000;
+        const lastYear = parse(input.max?.slice(0, 10))?.getFullYear() || Math.max(today().getFullYear() + 100, month.getFullYear());
         for (let year = lastYear; year >= firstYear; year--) {
             const option = document.createElement('option');
             option.value = String(year);
@@ -94,8 +99,8 @@
         previous.dataset.previous = '';
         const next = button('›', 'Next month', () => move(1));
         next.dataset.next = '';
-        previous.disabled = Boolean(input.min && format(new Date(month.getFullYear(), month.getMonth(), 0)) < input.min);
-        next.disabled = Boolean(input.max && format(new Date(month.getFullYear(), month.getMonth() + 1, 1)) > input.max);
+        previous.disabled = Boolean(input.min && format(new Date(month.getFullYear(), month.getMonth(), 0)) < input.min.slice(0, 10));
+        next.disabled = Boolean(input.max && format(new Date(month.getFullYear(), month.getMonth() + 1, 1)) > input.max.slice(0, 10));
         header.append(title, previous, next);
         const days = document.createElement('div');
         days.className = 'flight-date-days';
@@ -111,7 +116,7 @@
             const date = new Date(month.getFullYear(), month.getMonth(), day);
             const item = button(String(day), date.toLocaleDateString('en', { dateStyle: 'full' }), () => select(date));
             item.disabled = !allowed(date);
-            item.setAttribute('aria-pressed', String(format(date) === input.value));
+            item.setAttribute('aria-pressed', String(format(date) === (withTime ? draftDate : input.value)));
             if (format(date) === format(today())) item.setAttribute('aria-current', 'date');
             days.append(item);
         }
@@ -121,12 +126,54 @@
         current.disabled = !allowed(today());
         footer.append(button('Clear', null, () => select(null)), current);
         panel.append(header, days, footer);
+        if (withTime) {
+            const time = document.createElement('div');
+            time.className = 'flight-date-time';
+            const caption = document.createElement('span');
+            caption.textContent = 'Time (24-hour)';
+            const hour = document.createElement('input');
+            const minute = document.createElement('input');
+            [hour, minute].forEach(control => { control.type = 'number'; control.inputMode = 'numeric'; control.step = '1'; control.min = '0'; });
+            hour.max = '23'; minute.max = '59'; hour.value = hours; minute.value = minutes;
+            hour.setAttribute('aria-label', 'Hour (0–23)');
+            minute.setAttribute('aria-label', 'Minute (0–59)');
+            hour.addEventListener('input', () => { hours = hour.value; });
+            minute.addEventListener('input', () => { minutes = minute.value; });
+            const separator = document.createElement('span'); separator.textContent = ':';
+            time.append(caption, hour, separator, minute);
+            const error = document.createElement('small');
+            error.className = 'flight-date-time-error'; error.setAttribute('role', 'status');
+            const apply = () => {
+                const validHour = /^\d{1,2}$/.test(hours) && Number(hours) <= 23;
+                const validMinute = /^\d{1,2}$/.test(minutes) && Number(minutes) <= 59;
+                if (!validHour || !validMinute) {
+                    error.textContent = 'Enter an hour from 0–23 and minutes from 0–59.';
+                    (!validHour ? hour : minute).focus(); return;
+                }
+                const value = `${draftDate}T${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+                if ((input.min && value < input.min) || (input.max && value > input.max)) {
+                    error.textContent = 'Choose a date and time within the allowed range.'; return;
+                }
+                input.value = value;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                close(true);
+            };
+            [hour, minute].forEach(control => control.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); apply(); } }));
+            const applyButton = button('Apply date and time', null, apply);
+            applyButton.className = 'flight-date-apply';
+            panel.append(time, error, applyButton);
+        }
     };
     const open = () => {
         if (input.disabled) return;
-        month = parse(input.value) || today();
-        if (input.min && format(month) < input.min) month = parse(input.min);
-        if (input.max && format(month) > input.max) month = parse(input.max);
+        month = parse(input.value.slice(0, 10)) || today();
+        if (input.min && format(month) < input.min.slice(0, 10)) month = parse(input.min.slice(0, 10));
+        if (input.max && format(month) > input.max.slice(0, 10)) month = parse(input.max.slice(0, 10));
+        if (withTime) {
+            draftDate = format(month);
+            [hours, minutes] = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(input.value) ? input.value.slice(11).split(':') : ['12', '00'];
+        }
         month.setDate(1);
         render();
         panel.hidden = false;
@@ -156,5 +203,6 @@
     document.addEventListener('pointerdown', event => { if (!field.contains(event.target)) close(); });
     field.addEventListener('focusout', event => { if (!field.contains(event.relatedTarget)) close(); });
     window.addEventListener('resize', () => close());
+    input.form?.addEventListener('reset', () => close());
     });
 })();

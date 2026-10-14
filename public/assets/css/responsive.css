@@ -1,4 +1,8 @@
 /* Shared guardrails for narrow screens and touch input. */
+.customer-app .customer-field-error{display:block;color:#963f3f;font-size:.75rem;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
+.customer-app .customer-field-error:empty{display:none}
+.customer-app :is(input,select)[aria-invalid=true]{border-color:#b44343;outline-color:#b44343}
+.customer-app .seat-passenger-row>.customer-field-error{grid-column:1/-1}
 :root{--alert-blue:#597f97;--alert-ink:#183251;--alert-muted:#697985;--alert-border:#e3e9ee;--alert-danger:#a5464c}
 *,*::before,*::after{box-sizing:border-box}
 html{width:100%;overflow-x:clip;-webkit-text-size-adjust:100%}

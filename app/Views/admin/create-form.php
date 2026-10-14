@@ -39,13 +39,13 @@ $missingSeats = $section === 'seats' && !$options['flights'];
             <label><?= $label ?><select name="<?= $name ?>" required><option value="" selected disabled>Choose an airport</option><?php foreach ($options['airports'] as $item): ?><option value="<?= (int)$item['id'] ?>"><?= $e($item['city'].' — '.$item['iata_code'].' · '.$item['name']) ?></option><?php endforeach ?></select></label>
             <?php endforeach ?>
         </fieldset>
-        <fieldset class="admin-form-group"><legend>2. Set the schedule and fare</legend>
+        <fieldset class="admin-form-group admin-flight-schedule"><legend>2. Set the schedule and fare</legend>
             <p class="admin-group-help" id="schedule-help">All schedule times use <?= $e($GLOBALS['config']['app']['timezone'] ?? date_default_timezone_get()) ?>. Arrival must be later than departure.</p>
-            <label>Departure date and time<input type="datetime-local" name="departure_at" required aria-describedby="schedule-help"></label>
-            <label>Arrival date and time<input type="datetime-local" name="arrival_at" required aria-describedby="schedule-help"></label>
-            <label>Fare per passenger<input name="base_fare" type="number" min="0.01" step="0.01" required aria-describedby="fare-help"><small id="fare-help">Enter the price for one passenger, before the booking total is calculated.</small></label>
-            <label>Currency code<input name="currency" value="PKR" maxlength="3" required aria-describedby="currency-help"><small id="currency-help">Three-letter code, such as PKR or USD.</small></label>
-            <label>Flight status<select name="status"><?php foreach (['scheduled','boarding','departed','completed','cancelled'] as $status): ?><option value="<?= $status ?>"><?= ucfirst($status) ?></option><?php endforeach ?></select></label>
+            <label class="admin-flight-time">Departure date and time<input type="datetime-local" name="departure_at" required aria-describedby="schedule-help"></label>
+            <label class="admin-flight-time">Arrival date and time<input type="datetime-local" name="arrival_at" required aria-describedby="schedule-help"></label>
+            <label class="admin-flight-short">Fare per passenger<input name="base_fare" type="number" min="0.01" step="0.01" required aria-describedby="fare-help"><small id="fare-help">Enter the price for one passenger, before the booking total is calculated.</small></label>
+            <label class="admin-flight-short">Currency code<input name="currency" value="PKR" maxlength="3" required aria-describedby="currency-help"><small id="currency-help">Three-letter code, such as PKR or USD.</small></label>
+            <label class="admin-flight-short">Flight status<select name="status"><?php foreach (['scheduled','boarding','departed','completed','cancelled'] as $status): ?><option value="<?= $status ?>"><?= ucfirst($status) ?></option><?php endforeach ?></select></label>
         </fieldset>
         <p class="admin-form-next">After saving: open <strong>Seats &amp; availability</strong> and create the flight's seat layout. A flight needs seats before customers can book it.</p>
         <?php else: ?>

@@ -29,7 +29,7 @@ class Element {
     dispatchEvent(event) { this.dispatched.push(event.type); }
 }
 
-function setup(width = 1280, { now = [2026, 9, 14, 12], travelMin = '2026-10-14', travelMax = '' } = {}) {
+function setup(width = 1280, { now = [2026, 9, 14, 12], travelMin = '2026-10-14', travelMax = '', dateTime = null, record = false } = {}) {
     // Freeze only the application's VM clock; explicit dates and local-time
     // arithmetic keep normal Date behavior. The host clock remains untouched.
     const timestamp = new Date(...now).getTime();
@@ -41,6 +41,11 @@ function setup(width = 1280, { now = [2026, 9, 14, 12], travelMin = '2026-10-14'
         Object.assign(new Element('input'), { name: 'date', value: '', min: travelMin, max: travelMax }),
         Object.assign(new Element('input'), { name: 'passengers[0][date_of_birth]', value: '2000-02-29', min: '1000-01-01', max: '2026-10-14' })
     ];
+    if (dateTime !== null) inputs.push(Object.assign(new Element('input'), { type: 'datetime-local', name: 'departure_at', value: dateTime, min: '', max: '' }));
+    if (record) {
+        inputs[2].form = new Element('form');
+        inputs[2].setAttribute('form', 'admin-edit-flights-1');
+    }
     vm.runInNewContext(script, {
         document: { querySelectorAll: () => inputs, createElement: tag => new Element(tag), addEventListener() {} },
         window: { innerWidth: width, addEventListener() {} }, Date: CalendarDate,
@@ -91,6 +96,80 @@ test('does not open a disabled passenger field', () => {
     input.disabled = true;
     input.events.click({ preventDefault() {} });
     assert.equal(panel(input).hidden, true);
+});
+
+test('date-time picker keeps edits pending until Apply and dispatches validation events', () => {
+    const { inputs: [, , input], panel } = setup(320, { dateTime: '2026-10-17T15:30' });
+    input.events.pointerdown({ preventDefault() {} });
+    let calendar = panel(input);
+    assert.equal(calendar.querySelector('[aria-label="Hour (0–23)"]').value, '15');
+    assert.equal(calendar.querySelector('[aria-label="Minute (0–59)"]').value, '30');
+    calendar.all().find(item => item.attrs['aria-pressed'] !== undefined && item.textContent === '18').events.click();
+    assert.equal(input.value, '2026-10-17T15:30');
+    assert.equal(calendar.hidden, false);
+    const hour = calendar.querySelector('[aria-label="Hour (0–23)"]');
+    const minute = calendar.querySelector('[aria-label="Minute (0–59)"]');
+    hour.value = '23'; hour.events.input(); minute.value = '59'; minute.events.input();
+    calendar.all().find(item => item.className === 'flight-date-apply').events.click();
+    assert.equal(input.value, '2026-10-18T23:59');
+    assert.deepEqual(input.dispatched, ['input', 'change']);
+    assert.equal(calendar.hidden, true);
+});
+
+test('editable flight date keeps its form association and closes on Cancel/reset', () => {
+    const { inputs: [, , input], panel } = setup(320, { dateTime: '2026-10-24T13:00', record: true });
+    const form = input.form;
+    input.events.click({ preventDefault() {} });
+    assert.equal(panel(input).hidden, false);
+    const hour = panel(input).querySelector('[aria-label="Hour (0–23)"]');
+    assert.equal(hour.value, '13');
+    hour.value = '15'; hour.events.input();
+    assert.equal(input.value, '2026-10-24T13:00');
+    assert.equal(input.form, form);
+    assert.equal(input.attrs.form, 'admin-edit-flights-1');
+    form.events.reset();
+    assert.equal(panel(input).hidden, true);
+    input.events.click({ preventDefault() {} });
+    assert.equal(panel(input).querySelector('[aria-label="Hour (0–23)"]').value, '13');
+});
+
+test('date-time picker rejects invalid hours/minutes and out-of-range times', () => {
+    const { inputs: [, , input], panel } = setup(320, { dateTime: '2026-10-17T15:30' });
+    input.max = '2026-10-17T16:00';
+    input.events.click({ preventDefault() {} });
+    const calendar = panel(input);
+    const hour = calendar.querySelector('[aria-label="Hour (0–23)"]');
+    const minute = calendar.querySelector('[aria-label="Minute (0–59)"]');
+    const apply = calendar.all().find(item => item.className === 'flight-date-apply');
+    for (const value of ['', '-1', '24', '1.5', '1e1']) {
+        hour.value = value; hour.events.input(); apply.events.click();
+        assert.equal(calendar.hidden, false);
+        assert.equal(input.value, '2026-10-17T15:30');
+    }
+    hour.value = '15'; hour.events.input();
+    minute.value = '60'; minute.events.input(); apply.events.click();
+    assert.equal(calendar.hidden, false);
+    minute.value = '30'; minute.events.input(); hour.value = '17'; hour.events.input(); apply.events.click();
+    assert.equal(calendar.hidden, false);
+    hour.value = '16'; hour.events.input(); minute.value = '0'; minute.events.input(); apply.events.click();
+    assert.equal(input.value, '2026-10-17T16:00');
+});
+
+test('date-time picker supports midnight across a year boundary and clearing', () => {
+    const { inputs: [, , input], panel } = setup(320, { dateTime: '2026-12-31T23:59' });
+    input.events.click({ preventDefault() {} });
+    const calendar = panel(input);
+    calendar.querySelector('[data-next]').events.click();
+    calendar.all().find(item => item.attrs['aria-pressed'] !== undefined && item.textContent === '1').events.click();
+    const hour = calendar.querySelector('[aria-label="Hour (0–23)"]');
+    const minute = calendar.querySelector('[aria-label="Minute (0–59)"]');
+    hour.value = '0'; hour.events.input(); minute.value = '0'; minute.events.input();
+    calendar.all().find(item => item.className === 'flight-date-apply').events.click();
+    assert.equal(input.value, '2027-01-01T00:00');
+    input.events.click({ preventDefault() {} });
+    calendar.all().find(item => item.tag === 'button' && item.textContent === 'Clear').events.click();
+    assert.equal(input.value, '');
+    assert.equal(calendar.hidden, true);
 });
 
 for (const year of [1900, 2000, 2023, 2024, 2100, 2400]) {

@@ -19,7 +19,7 @@
             <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required aria-describedby="password-hint password-error">
             <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false" hidden></button>
         </div>
-        <p class="field-hint" id="password-hint">Use 8 to 72 characters.</p>
+        <p class="field-hint" id="password-hint">Use 8–72 bytes. English letters and numbers use one byte each; some international characters use more.</p>
         <p class="field-error" id="password-error" data-error-for="password" aria-live="polite"></p>
 
         <label for="password_confirmation">Confirm password</label>

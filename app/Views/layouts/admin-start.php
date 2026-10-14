@@ -14,6 +14,7 @@ require BASE_PATH.'/app/Views/layouts/header.php';
 <?php require BASE_PATH.'/app/Views/layouts/admin-header.php'; ?>
 <link rel="stylesheet" href="/assets/css/admin-layout.css">
 <link rel="stylesheet" href="/assets/css/admin-workspace.css">
+<?php if(($section??'')==='flights'): ?><link rel="stylesheet" href="/assets/css/date-picker.css"><?php endif ?>
 <main class="admin-main">
 <div class="admin-content">
 <?php if (($section ?? '') !== 'dashboard') require BASE_PATH.'/app/Views/partials/back-button.php'; ?>

@@ -9,12 +9,14 @@ function setup(initial = ['', '']) {
     const fill = { style: {} };
     const save = { disabled: false };
     const help = { textContent: '' };
-    const active = { value: '1' };
+    const active = { value: '1', attributes: {}, setAttribute(name,value){ this.attributes[name]=value; }, addEventListener(name,fn){ this[name]=fn; } };
     const selects = initial.map((value, index) => {
         const label = { textContent: '' };
-        const row = { querySelector: selector => selector === 'strong' ? { textContent: `Passenger ${index + 1}` } : label };
+        const row = { append(error){ this.error=error; }, querySelector: selector => selector === 'strong' ? { textContent: `Passenger ${index + 1}` } : label };
         return {
             value, dataset: { passengerId: String(index + 1) }, events: {},
+            attributes: {}, setAttribute(name,value){ this.attributes[name]=value; }, getAttribute(name){ return this.attributes[name]; },
+            setCustomValidity(message){ this.message=message; }, focus(){ this.focused=true; },
             options: ['', '10', '11'].map(value => ({ value, disabled: false, dataset: { seatNumber: value === '10' ? '10A' : '10B' } })),
             get selectedOptions() { return this.options.filter(option => option.value === this.value); },
             closest: () => row,
@@ -35,7 +37,7 @@ function setup(initial = ['', '']) {
         addEventListener(type, callback) { this.events[type] = callback; }
     };
     const elements = { 'seat-selection-form': form, 'active-passenger': active, 'seat-map-help': help, 'seat-selection-progress': progress, 'seat-progress-fill': fill, 'save-seat-selection': save };
-    vm.runInNewContext(script, { document: { getElementById: id => elements[id] } });
+    vm.runInNewContext(script, { document: { getElementById: id => elements[id], createElement: () => ({setAttribute(){}}) } });
     return { form, active, selects, buttons, progress, fill, save, help };
 }
 
@@ -93,4 +95,24 @@ test('saved assignments remain selected on page load', () => {
     assert.equal(ui.progress.textContent, '2 of 2 passengers have seats');
     assert.equal(ui.save.disabled, false);
     assert.equal(ui.buttons[1].attributes['aria-pressed'], 'true');
+});
+
+test('shows per-passenger errors on blur and clears them after seat selection', () => {
+    const ui = setup();
+    ui.selects[0].events.blur();
+    assert.match(ui.selects[0].message, /available seat/);
+    assert.equal(ui.selects[0].attributes['aria-invalid'], 'true');
+    ui.buttons[0].events.click();
+    assert.equal(ui.selects[0].message, '');
+    assert.equal(ui.selects[0].attributes['aria-invalid'], 'false');
+});
+
+test('rejects seats outside the available options and an invalid active passenger', () => {
+    const ui = setup(['999', '11']);
+    assert.equal(ui.save.disabled, true);
+    ui.active.value = '999'; ui.active.change();
+    assert.equal(ui.active.attributes['aria-invalid'], 'true');
+    assert.match(ui.help.textContent, /passenger from the list/);
+    ui.active.value = '1'; ui.active.change();
+    assert.equal(ui.active.attributes['aria-invalid'], 'false');
 });

@@ -90,20 +90,6 @@
         const match=query&&[...flightSelect.options].find(option=>option.value&&option.textContent.trim().toLowerCase()===query.toLowerCase());
         if(match){flightSelect.value=match.value;flightSelect.dispatchEvent(new Event('change',{bubbles:true}));}
     }
-    if(createForm){
-        const validate = () => {
-            const departure=createForm.elements.namedItem('departure_airport_id');
-            const arrival=createForm.elements.namedItem('arrival_airport_id');
-            if(arrival)arrival.setCustomValidity(departure.value&&arrival.value===departure.value?'Choose a different arrival airport. A flight cannot depart and arrive at the same airport.':'');
-            const departs=createForm.elements.namedItem('departure_at');
-            const arrives=createForm.elements.namedItem('arrival_at');
-            if(arrives)arrives.setCustomValidity(departs.value&&arrives.value&&arrives.value<=departs.value?'Arrival must be later than departure. Check the date as well as the time.':'');
-            const rows=createForm.elements.namedItem('rows');
-            if(rows)rows.setCustomValidity(createForm.querySelector('input[name="letters[]"]:checked')?'':'Choose at least one seat letter.');
-        };
-        createForm.addEventListener('input',validate);createForm.addEventListener('change',validate);
-        createForm.addEventListener('reset',()=>setTimeout(validate,0));validate();
-    }
 
     content.querySelectorAll('form.inline-form').forEach(form=>{
         const select=form.querySelector('select[name=status]');if(!select)return;

@@ -1,6 +1,17 @@
 (() => {
     'use strict';
     const normalize = value => String(value ?? '').toLocaleLowerCase().replace(/\s+/g, ' ').trim();
+    const validateAdminSearch = (query, section = 'flights') => {
+        const description = section === 'flights' ? 'flight number, airline or route' : 'name, code, reference or email';
+        if (query === '') return '';
+        const value = query.trim();
+        if (!value) return `Enter a ${description}, or clear the search.`;
+        if (Array.from(query).length > 100) return 'Search must be 100 characters or fewer.';
+        const unsupported = section === 'flights' ? /[^\p{L}\p{M}\p{N} .,'’&()\/:·—–→-]/u : /[^\p{L}\p{M}\p{N} .,'’&()\/:·—–→_@+#%-]/u;
+        if (!/[\p{L}\p{N}]/u.test(value) || unsupported.test(value)) return `Enter a valid ${description}.`;
+        return '';
+    };
+    const validateFlightSearch = query => validateAdminSearch(query, 'flights');
     const filterRecords = (records, query, status) => {
         const terms = normalize(query).split(' ').filter(Boolean);
         return records.filter(record => terms.every(term => normalize(record.text).includes(term)) &&
@@ -13,7 +24,7 @@
     };
     const sortRecords = (records, column, descending) => [...records].sort((a, b) =>
         String(a.cells[column] ?? '').localeCompare(String(b.cells[column] ?? ''), undefined, { numeric: true, sensitivity: 'base' }) * (descending ? -1 : 1));
-    if (typeof module !== 'undefined') module.exports = { filterRecords, pageRecords, sortRecords };
+    if (typeof module !== 'undefined') module.exports = { filterRecords, pageRecords, sortRecords, validateFlightSearch, validateAdminSearch };
     if (typeof document === 'undefined') return;
 
     const create = (tag, className, text) => {
@@ -27,8 +38,8 @@
     const announce = message => { if (feedback) feedback.textContent = message; };
     const cellText = cell => {
         const copy = cell.cloneNode(true);
-        copy.querySelectorAll('input,select,button,.admin-unsaved').forEach(node => node.remove());
-        return [copy.textContent, ...[...cell.querySelectorAll('input:not([type=hidden]),select')].map(node => node.value)].join(' ');
+        copy.querySelectorAll('input,select,button,.admin-unsaved,.flight-date-calendar,.admin-field-error').forEach(node => node.remove());
+        return [copy.textContent, ...[...cell.querySelectorAll('input:not([type=hidden]),select')].filter(node => !node.closest('.flight-date-calendar')).map(node => node.value)].join(' ');
     };
     document.querySelectorAll('[data-admin-table]').forEach((container, tableIndex) => {
         const table = container.querySelector('table');
@@ -70,6 +81,14 @@
         const viewOptions=create('details','admin-table-options');
         viewOptions.append(create('summary','','Sort options'),sortLabel);
         toolbar.append(searchLabel, statusLabel, viewOptions, clear); wrapper.before(toolbar);
+        const searchError = create('small', 'admin-search-error');
+        if (searchError) {
+            searchError.id = `admin-search-error-${tableIndex}`;
+            searchError.hidden = true;
+            searchError.setAttribute('aria-live', 'polite');
+            search.setAttribute('aria-describedby', searchError.id);
+            toolbar.append(searchError);
+        }
         const footer = create('div', 'admin-table-footer'); const count = create('p'); count.setAttribute('role', 'status'); count.setAttribute('aria-live', 'polite');
         const pageControls = create('div', 'admin-pagination'); const sizeLabel = create('label', '', 'Rows'); const size = create('select');
         [10, 25, 50, 0].forEach(value => option(size, String(value), value ? String(value) : 'All')); sizeLabel.append(size);
@@ -77,34 +96,65 @@
         const pageLabel = create('span'); pageControls.append(sizeLabel, previous, pageLabel, next); footer.append(count, pageControls); wrapper.after(footer);
         pageControls.setAttribute('aria-label','Record pagination');
         let page = 1;
+        let lastValidSearch = '';
+        const choices = new Map();
+        [status, sort, size].forEach((field, index) => {
+            const error = create('small', 'admin-choice-error');
+            error.id = `admin-choice-${tableIndex}-${index}-error`; error.hidden = true; error.setAttribute('aria-live', 'polite');
+            field.setAttribute('aria-describedby', error.id); field.after(error);
+            choices.set(field, { value: field.value, error });
+        });
+        const choiceValue = field => {
+            const state = choices.get(field);
+            const valid = [...field.options].some(option => option.value === field.value && !option.disabled);
+            const message = valid ? '' : 'Choose one of the listed options.';
+            field.setCustomValidity(message); field.setAttribute('aria-invalid', String(!valid));
+            state.error.textContent = message; state.error.hidden = valid;
+            if (valid) state.value = field.value;
+            return state.value;
+        };
         const params = new URLSearchParams(window.location.search);
         if (!tableIndex) { search.value = params.get('q') || ''; const initialStatus=params.get('status'); if ([...status.options].some(item => item.value === initialStatus)) status.value = initialStatus; }
         const update = (resetPage = true, sync = true) => {
+            let query = search.value;
+            if (searchError) {
+                const message = validateAdminSearch(query, section);
+                searchError.textContent = message;
+                searchError.hidden = !message;
+                search.setCustomValidity(message);
+                search.setAttribute('aria-invalid', String(Boolean(message)));
+                if (message) query = lastValidSearch;
+                else lastValidSearch = query;
+            }
             if (resetPage) page = 1;
             records.forEach(record => { record.cells = [...record.row.cells].map(cellText); record.text = record.cells.join(' '); });
-            let matching = filterRecords(records, search.value, status.value);
-            if (sort.value) { const [column, direction] = sort.value.split(':'); matching = sortRecords(matching, Number(column), direction === 'desc'); }
-            const result = pageRecords(matching, page, Number(size.value)); page = result.page;
+            const statusValue = choiceValue(status), sortValue = choiceValue(sort), sizeValue = choiceValue(size);
+            let matching = filterRecords(records, query, statusValue);
+            if (sortValue) { const [column, direction] = sortValue.split(':'); matching = sortRecords(matching, Number(column), direction === 'desc'); }
+            const result = pageRecords(matching, page, Number(sizeValue)); page = result.page;
             records.forEach(record => record.row.hidden = true);
             result.rows.forEach(record => { record.row.hidden = false; body.append(record.row); });
-            if (originalEmpty) originalEmpty.hidden = records.length > 0 || Boolean(search.value || status.value);
-            empty.hidden = matching.length > 0 || (!records.length && !search.value && !status.value);
-            const start = matching.length ? (Number(size.value) ? (page - 1) * Number(size.value) + 1 : 1) : 0;
+            if (originalEmpty) originalEmpty.hidden = records.length > 0 || Boolean(query || statusValue);
+            empty.hidden = matching.length > 0 || (!records.length && !query && !statusValue);
+            const start = matching.length ? (Number(sizeValue) ? (page - 1) * Number(sizeValue) + 1 : 1) : 0;
             count.textContent = `Showing ${start}–${matching.length ? start + result.rows.length - 1 : 0} of ${matching.length} records${matching.length !== records.length ? ` (${records.length} total)` : ''}`;
             pageLabel.textContent = `Page ${page} of ${result.pages}`; previous.disabled = page <= 1; next.disabled = page >= result.pages;
             if (!tableIndex && sync) {
                 const url = new URL(window.location.href);
-                search.value ? url.searchParams.set('q', search.value) : url.searchParams.delete('q');
-                status.value ? url.searchParams.set('status', status.value) : url.searchParams.delete('status');
+                query ? url.searchParams.set('q', query) : url.searchParams.delete('q');
+                statusValue ? url.searchParams.set('status', statusValue) : url.searchParams.delete('status');
                 try { history.replaceState(history.state, '', url); } catch { /* Filtering still works when history is unavailable. */ }
             }
         };
         search.addEventListener('input', () => update()); status.addEventListener('change', () => update()); sort.addEventListener('change', () => update()); size.addEventListener('change', () => update());
+        [status, sort, size].forEach(field => field.addEventListener('blur', () => choiceValue(field)));
+        if (searchError) search.addEventListener('blur', () => update(false, false));
         clear.addEventListener('click', () => { search.value='';status.value='';sort.value='';update();search.focus(); });
         previous.addEventListener('click', () => { page--;update(false); }); next.addEventListener('click', () => { page++;update(false); });
         table.addEventListener('input', event => {
+            if (event.target.closest('.flight-date-calendar')) return;
             const row = event.target.closest('tr'); if (!row || event.target.type === 'hidden') return;
-            const controls = [...row.querySelectorAll('input:not([type=hidden]),select')];
+            const controls = [...row.querySelectorAll('input:not([type=hidden]),select')].filter(control => !control.closest('.flight-date-calendar'));
             const dirty = controls.some(control => control.tagName === 'SELECT' ? control.value !== ([...control.options].find(item => item.defaultSelected)?.value ?? control.options[0]?.value) : control.value !== control.defaultValue);
             row.classList.toggle('admin-row-dirty', dirty); const note=row.querySelector('.admin-unsaved');if(note)note.textContent=dirty?'Unsaved changes':'';
         });

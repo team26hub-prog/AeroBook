@@ -8,7 +8,7 @@ require BASE_PATH.'/app/Views/layouts/admin-start.php';
 ?>
 <?php if($success): ?><div class="admin-alert success" role="status" data-admin-feedback><?= $e($success) ?><?php if($section==='flights'): ?><p class="admin-next-step">Next: <a href="/admin/seats#admin-create">create or check seat availability</a> before customers book.</p><?php elseif($section==='airlines'||$section==='airports'): ?><p class="admin-next-step">Ready to continue? <a href="/admin/flights#admin-create">Schedule a flight</a>.</p><?php endif ?></div><?php endif ?><?php if($errors): ?><div class="admin-alert error" role="alert" data-admin-feedback><ul><?php foreach($errors as $error): ?><li><?= $e($error) ?></li><?php endforeach ?></ul></div><?php endif ?>
 <?php require BASE_PATH.'/app/Views/admin/page-intro.php'; ?>
-<?php require BASE_PATH.'/app/Views/admin/workflow-help.php'; ?>
+<?php if(!in_array($section,['dashboard','flights'],true))require BASE_PATH.'/app/Views/admin/workflow-help.php'; ?>
 <?php require BASE_PATH.'/app/Views/admin/create-form.php'; ?>
 <?php if($section==='dashboard'): ?>
 <?php require BASE_PATH.'/app/Views/admin/dashboard.php'; ?>
@@ -31,4 +31,9 @@ require BASE_PATH.'/app/Views/layouts/admin-start.php';
 <?php require BASE_PATH.'/app/Views/layouts/admin-end.php'; ?>
 <script defer src="/assets/js/admin-workspace.js"></script>
 <script defer src="/assets/js/admin-usability.js"></script>
+<?php if($section==='airports'): ?><script type="application/json" id="admin-timezone-values"><?= json_encode(array_values(array_unique(array_merge(DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC),array_keys(timezone_abbreviations_list())))),JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?></script><?php endif ?>
+<script defer src="/assets/js/admin-validation.js"></script>
+<?php if($section==='flights'): ?><script defer src="/assets/js/admin-flight-validation.js"></script><?php endif ?>
+<?php if($section==='flights'): ?><script defer src="/assets/js/admin-flight-selects.js"></script><?php endif ?>
+<?php if($section==='flights'): ?><script defer src="/assets/js/flight-date-picker.js"></script><?php endif ?>
 <?php require BASE_PATH.'/app/Views/layouts/footer.php'; ?>

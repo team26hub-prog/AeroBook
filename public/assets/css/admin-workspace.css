@@ -1,5 +1,8 @@
 /* Admin workflow enhancements, scoped to content to preserve sidebar colours. */
 .admin-content [hidden]{display:none!important}
+.admin-content .admin-field-error{display:block;flex-basis:100%;grid-column:1/-1;width:100%;margin:4px 0 0;color:#963f3f;font-size:.75rem;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
+.admin-content .admin-field-error:empty,.admin-content input[hidden]+.admin-field-error{display:none}
+.admin-content :is(input,select,textarea)[aria-invalid=true]{border-color:#b44343;outline-color:#b44343}
 .admin-content .admin-card.admin-create-details{padding:0;overflow:visible}
 .admin-create-details>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px;cursor:pointer;color:#183251;font-weight:750;list-style:none}
 .admin-create-details>summary::-webkit-details-marker{display:none}
@@ -53,6 +56,48 @@ body .admin-content .admin-card:hover{transform:none}body .admin-content .stat-c
     .admin-create .admin-form{grid-template-columns:1fr;gap:14px}.admin-create .admin-form .admin-button{width:auto}.admin-form-actions{gap:10px}.admin-content .table-wrap{border:0;overflow:visible}.admin-content .table-wrap table{min-width:0;width:100%;display:block}.admin-content .table-wrap thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.admin-content .table-wrap tbody{display:grid;gap:12px;width:100%}.admin-content .table-wrap tr{display:grid;padding:12px;border:1px solid #d7e8ec;border-radius:9px;background:#fff}.admin-content .table-wrap td{display:block;min-width:0;max-width:100%;border:0;padding:8px 0}.admin-content .table-wrap td[data-label]:before{content:attr(data-label);display:block;color:#536c7c;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}.admin-content .table-wrap td:last-child{border-top:1px solid #e1edf0;padding-top:12px}.admin-content .table-wrap td[colspan]{border:0}.admin-content td input:not([type=hidden]),.admin-content td input[type=datetime-local],.admin-content td select{width:100%;min-width:0;font-size:16px}.admin-content .admin-row-dirty td:first-child{box-shadow:none}.admin-content .table-wrap tr.admin-row-dirty{border-left:3px solid #0D9488}.admin-content .inline-form{align-items:start}.admin-content .inline-form select{flex:1}.admin-content .table-wrap .empty{padding:16px 0}.admin-pagination{width:100%;justify-content:space-between}.admin-table-footer{gap:10px}.admin-record-form{flex-direction:row;flex-wrap:wrap}.admin-passenger-details p{max-width:none}.admin-table-toolbar{padding:12px}.admin-table-toolbar .admin-reset{width:100%}
 }
 @media print{.admin-page-shortcuts,.admin-table-toolbar,.admin-table-footer,.admin-quick-tasks{display:none}.admin-content .table-wrap table{display:table}.admin-content .table-wrap tbody{display:table-row-group}.admin-content .table-wrap tr{display:table-row}.admin-content .table-wrap td{display:table-cell}.admin-content td[data-label]:before{display:none}}
+
+/* Flight scheduling: keep grouped sections out of the generic create-form grid. */
+.admin-section-flights .admin-create .admin-guided-form{display:block}
+.admin-section-flights .admin-create[open]>summary{border-bottom:1px solid #d5e5ea;border-radius:12px 12px 0 0;background:#eff8fa}
+.admin-section-flights .admin-create-body{width:100%;max-width:1008px;margin-inline:auto;padding:24px}
+.admin-section-flights .admin-create .admin-form-group{box-sizing:border-box;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 20px;margin-bottom:24px;padding:20px;background:#f8fcfd}
+.admin-section-flights .admin-create .admin-flight-schedule{grid-template-columns:repeat(6,minmax(0,1fr))}
+.admin-section-flights .admin-flight-time{grid-column:span 3}
+.admin-section-flights .admin-flight-short{grid-column:span 2}
+.admin-section-flights .admin-form-group legend{padding:0 8px;font-size:.95rem}
+.admin-section-flights .admin-create .admin-form-group label{width:100%;min-width:0;align-content:start;align-items:baseline}
+.admin-section-flights .admin-create .admin-form-group :is(input,select){box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-inline-size:0;min-height:44px}
+.admin-section-flights .admin-create .admin-form-group select{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-section-flights .admin-form-group label small{margin:0}
+.admin-section-flights .admin-create .admin-flight-field-error{flex-basis:100%;min-height:2.8em;color:#963f3f;font-size:.75rem;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
+.admin-section-flights .admin-flight-field-error:empty{visibility:hidden}
+.admin-section-flights .admin-create :is(input,select)[aria-invalid=true]{border-color:#b44343;outline-color:#b44343}
+.admin-section-flights .admin-group-help{line-height:1.6}
+.admin-content .admin-table-toolbar .admin-search-error{flex-basis:100%;margin:0;color:#963f3f;font-size:.75rem;line-height:1.4;overflow-wrap:anywhere}
+.admin-content .admin-choice-error{color:#963f3f;font-size:.75rem;line-height:1.4;overflow-wrap:anywhere}
+.admin-section-flights .admin-create label>.admin-flight-select{position:relative;flex-basis:100%;width:100%;min-width:0}
+.admin-section-flights .admin-flight-select.is-open{z-index:100}
+#admin-create select.admin-flight-native-select{position:absolute!important;width:1px!important;min-width:0!important;height:1px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;clip-path:inset(50%);overflow:hidden;pointer-events:none}
+.admin-section-flights .admin-flight-select-toggle{position:relative;display:flex;align-items:center;box-sizing:border-box;width:100%;min-width:0;min-height:44px;margin:0;padding:9px 34px 9px 11px;border:1px solid #cbd5dd;border-radius:6px;background:#fff;color:var(--admin-ink);font:inherit;font-size:.86rem;line-height:1.5;text-align:left;cursor:pointer}
+.admin-section-flights .admin-flight-select-toggle>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-section-flights .admin-flight-select-toggle:after{position:absolute;right:14px;top:calc(50% - 4px);width:7px;height:7px;border-right:2px solid #536c7c;border-bottom:2px solid #536c7c;transform:rotate(45deg);content:''}
+.admin-section-flights .admin-flight-select-toggle[aria-invalid=true]{border-color:#b44343}
+.admin-section-flights .admin-flight-select-options{position:absolute;top:calc(100% + 4px);left:0;box-sizing:border-box;width:100%;max-width:100%;max-height:min(280px,50vh);overflow-y:auto;overscroll-behavior:contain;padding:4px;border:1px solid #cbd5dd;border-radius:7px;background:#fff;box-shadow:0 8px 24px rgb(24 50 81 / 15%)}
+.admin-section-flights .admin-flight-select-option{min-height:44px;padding:10px;border-radius:4px;color:var(--admin-ink);font-size:.86rem;line-height:1.5;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+.admin-section-flights .admin-flight-select-option:is(:hover,.is-active){background:#e2f5f3;color:#075d63}
+.admin-section-flights .admin-flight-select-option[aria-selected=true]{font-weight:750}
+.admin-section-flights .admin-flight-select-option[aria-disabled=true]{color:#82939f;cursor:default}
+@media(max-width:820px){.admin-section-flights .admin-flight-select-toggle,.admin-section-flights .admin-flight-select-option{font-size:16px}}
+.admin-section-flights .admin-form-actions{margin-top:20px;padding-top:18px;gap:12px}
+.admin-section-flights .admin-form-actions :is(.admin-button,.admin-reset){min-height:44px;padding:10px 18px}
+@media(max-width:640px){
+ .admin-section-flights .admin-create-body{padding:16px}
+ .admin-section-flights .admin-create .admin-form-group{grid-template-columns:minmax(0,1fr);padding:14px;gap:16px;margin-bottom:20px}
+ .admin-section-flights .admin-create .admin-form-group label{grid-column:1/-1}
+ .admin-section-flights .admin-form-actions{align-items:stretch;flex-direction:column}
+ .admin-section-flights .admin-form-actions :is(.admin-button,.admin-reset){width:100%}
+}
 
 /* Seats: use the existing teal/cyan surfaces and align every mobile action. */
 .admin-section-seats .admin-content :is(.admin-card,.admin-workflow-help){background:#e2f5f3;border-color:#bfdfdf}

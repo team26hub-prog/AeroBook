@@ -35,4 +35,5 @@ require BASE_PATH.'/app/Views/layouts/customer-start.php';
     <p class="flight-footnote">Selecting a flight does not create a booking.</p>
 </div>
 <script defer src="/assets/js/flight-availability.js"></script>
+<script defer src="/assets/js/customer-flight-validation.js"></script>
 <?php require BASE_PATH.'/app/Views/layouts/customer-end.php'; ?>

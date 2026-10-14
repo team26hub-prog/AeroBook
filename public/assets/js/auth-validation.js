@@ -4,7 +4,7 @@
         const errorFor = field => form.querySelector(`[data-error-for="${CSS.escape(field.name)}"]`);
 
         const messageFor = field => {
-            const value = field.value.trim();
+            const value = field.type === 'password' ? field.value : field.value.trim();
             if (!value) return 'This field is required.';
 
             if (field.type === 'email') {
@@ -13,7 +13,12 @@
                 }
             }
 
-            if (field.name === 'full_name' && value.length > 150) return 'Your name must be 150 characters or fewer.';
+            if (field.name === 'full_name') {
+                if (Array.from(value).length > 150) return 'Your name must be 150 characters or fewer.';
+                if (/[\x00-\x1F\x7F]/u.test(value)) return 'Enter a valid name without control characters.';
+            }
+
+            if (field.name === 'password' && !form.action.endsWith('/register') && new TextEncoder().encode(field.value).length > 4096) return 'Your password must be 4,096 bytes or fewer.';
 
             if (field.name === 'password' && form.action.endsWith('/register')) {
                 const bytes = new TextEncoder().encode(field.value).length;
@@ -42,6 +47,7 @@
 
         fields.forEach(field => {
             field.addEventListener('blur', () => validate(field));
+            field.addEventListener('change', () => validate(field));
             field.addEventListener('input', () => {
                 validate(field);
                 if (field.name === 'password' && form.elements.namedItem('password_confirmation')?.value) {
@@ -54,8 +60,9 @@
             const invalid = fields.filter(field => !validate(field));
             if (invalid.length) {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 invalid[0].focus();
             }
-        });
+        }, true);
     });
 })();
