@@ -1,30 +1,35 @@
 ---
 # Default: main domain. For another domain, use its exact cPanel document root.
 # Clone the Git repository OUTSIDE this directory (e.g. $HOME/repositories/aerobook).
+# Push this file to Git, then use Update from Remote before Deploy HEAD Commit.
 deployment:
   tasks:
     - |
       set -eu
       export DEPLOYPATH="$HOME/public_html"
-      test -d "$DEPLOYPATH"
-      test -f public/index.php
-      test -x /usr/bin/rsync
+      test -d "$DEPLOYPATH" || { echo "Deployment failed: document root $DEPLOYPATH does not exist." >&2; exit 1; }
+      test -f public/index.php || { echo "Deployment failed: run from the AeroBook Git checkout." >&2; exit 1; }
+      test -x /usr/bin/rsync || { echo "Deployment failed: ask your host to install /usr/bin/rsync." >&2; exit 1; }
       # Refuse a repository deployed onto itself or a destination outside the account.
       account_root="$(realpath "$HOME")"
       destination="$(realpath "$DEPLOYPATH")"
       repository="$(pwd -P)"
-      case "$destination" in "$account_root"/*) ;; *) exit 1 ;; esac
-      test "$destination" != "$repository"
-      case "$destination/" in "$repository/"*) exit 1 ;; esac
+      case "$destination" in "$account_root"/*) ;; *) echo "Deployment failed: destination must be inside your cPanel account." >&2; exit 1 ;; esac
+      test "$destination" != "$repository" || { echo "Deployment failed: Git checkout and document root must be separate directories." >&2; exit 1; }
+      case "$destination/" in "$repository/"*) echo "Deployment failed: document root must be outside the Git checkout." >&2; exit 1 ;; esac
+      echo "Deploying AeroBook from $repository to $destination"
       # No --delete: never remove production uploads, settings, or installation state.
       # Explicit allowlist: no .env, .git, tests, seeds, editor files, or local secrets.
+      # Compare contents: matching sizes/timestamps must not hide committed changes.
+      # Itemized output lists each file updated in the cPanel deployment log.
       # Install HTTP protections before any private application or schema files.
-      /usr/bin/rsync -t --chmod=F644 .htaccess "$DEPLOYPATH/"
-      /usr/bin/rsync -rlt --chmod=D755,F644 app/ "$DEPLOYPATH/app/"
+      /usr/bin/rsync -ct --itemize-changes --chmod=F644 .htaccess "$DEPLOYPATH/"
+      /usr/bin/rsync -rclt --itemize-changes --chmod=D755,F644 app/ "$DEPLOYPATH/app/"
       /bin/mkdir -p "$DEPLOYPATH/config" "$DEPLOYPATH/database"
-      /usr/bin/rsync -t --chmod=F644 config/bootstrap.php config/installer.php "$DEPLOYPATH/config/"
-      /usr/bin/rsync -t --chmod=F644 database/schema.sql "$DEPLOYPATH/database/"
+      /usr/bin/rsync -ct --itemize-changes --chmod=F644 config/bootstrap.php config/installer.php "$DEPLOYPATH/config/"
+      /usr/bin/rsync -ct --itemize-changes --chmod=F644 database/schema.sql "$DEPLOYPATH/database/"
       /bin/mkdir -p "$DEPLOYPATH/public"
-      /usr/bin/rsync -t --chmod=F644 public/index.php public/.htaccess public/setup.php "$DEPLOYPATH/public/"
-      /usr/bin/rsync -rlt --chmod=D755,F644 public/assets/ "$DEPLOYPATH/public/assets/"
-      /usr/bin/rsync -t --chmod=F644 setup.php "$DEPLOYPATH/"
+      /usr/bin/rsync -ct --itemize-changes --chmod=F644 public/index.php public/.htaccess public/setup.php "$DEPLOYPATH/public/"
+      /usr/bin/rsync -rclt --itemize-changes --chmod=D755,F644 public/assets/ "$DEPLOYPATH/public/assets/"
+      /usr/bin/rsync -ct --itemize-changes --chmod=F644 setup.php "$DEPLOYPATH/"
+      echo "AeroBook deployment completed successfully."
