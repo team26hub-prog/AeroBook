@@ -9,4 +9,5 @@ $bottomNavItems=['home'=>['Home','/'],'search'=>['Search flights','/flights'],'b
 require BASE_PATH.'/app/Views/partials/mobile-navigation.php';
 ?>
 <script defer src="/assets/js/customer-navigation.js"></script>
+<script defer src="/assets/js/flight-date-picker.js"></script>
 <?php require BASE_PATH.'/app/Views/layouts/footer.php'; ?>

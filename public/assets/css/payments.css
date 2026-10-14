@@ -9,3 +9,6 @@
 .payment-booking-list .payment-booking-action{max-width:100%;min-width:0;flex:0 0 auto}
 .payment-booking-list .payment-booking-action .payment-button{width:fit-content;max-width:100%}
 @media(max-width:500px){.payment-booking-list .payment-booking-action{width:100%}.payment-booking-list .payment-booking-action .payment-button{width:100%}}
+.payment-form .payment-field-error{color:#963f3f;font-size:.75rem;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
+.payment-form .payment-field-error:empty{display:none}
+.payment-form :is(input,select,textarea)[aria-invalid=true]{border-color:#b44343;outline-color:#b44343}

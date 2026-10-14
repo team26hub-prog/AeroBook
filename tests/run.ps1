@@ -24,7 +24,7 @@ try {
     $javascript = @(Get-ChildItem tests -Filter '*.test.cjs' | ForEach-Object { $_.FullName })
     & $Node --test @javascript
     if ($LASTEXITCODE -ne 0) { $failures += 'JavaScript tests' }
-    foreach ($test in @('setup.php','public-home.php','ui-consistency.php','admin-workspace.php','flight-availability.php','admin-dashboard.mysql.php','application.integration.php','application.functional.php','database.seed.php')) {
+    foreach ($test in @('passenger-validation.php','setup.php','public-home.php','ui-consistency.php','admin-workspace.php','flight-availability.php','admin-dashboard.mysql.php','application.integration.php','application.functional.php','database.seed.php')) {
         & $Php ('tests/' + $test)
         if ($LASTEXITCODE -ne 0) { $failures += $test }
     }

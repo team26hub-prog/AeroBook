@@ -22,3 +22,16 @@ body .customer-content .booking-page.booking-confirmation{width:100%;max-width:9
  .booking-confirmation .booking-actions{grid-template-columns:minmax(0,1fr);justify-content:stretch}
  .booking-confirmation .review-passengers>p{align-items:flex-start;flex-direction:column;gap:4px}
 }
+.booking-form .passenger-field-error{color:#963f3f;font-size:.75rem;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
+.booking-form .passenger-field-error:empty{display:none}
+.booking-form :is(input,select)[aria-invalid=true]{border-color:#b44343;outline-color:#b44343}
+.passenger-field-heading{display:contents}
+@media(min-width:821px){
+ #passenger-form .passenger-fields{grid-template-columns:repeat(3,minmax(0,280px));justify-content:start;align-items:start;gap:28px 18px}
+ #passenger-form .passenger-fields label,
+ #passenger-form .passenger-count-label{width:100%;max-width:280px;min-width:0}
+ #passenger-form .passenger-fields label{grid-template-rows:minmax(38px,auto) auto auto;align-content:start}
+ #passenger-form .passenger-field-heading{display:block}
+ #passenger-form .passenger-fields .passenger-field-error{display:block;min-height:2.8em}
+ #passenger-form .passenger-fields .passenger-field-error:empty{visibility:hidden}
+}

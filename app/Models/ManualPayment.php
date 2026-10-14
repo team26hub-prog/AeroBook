@@ -51,8 +51,10 @@ final class ManualPayment extends Model
         if(!in_array($method,['bank_transfer','bank_deposit','mobile_wallet','cash','other'],true))throw new RuntimeException('Choose one of the available manual payment methods.');
         $sender=trim($this->scalar($input['sender_name']??null));
         if($sender===''||$this->length($sender)>150)throw new RuntimeException('Enter the sender or account holder name (maximum 150 characters).');
+        if(!preg_match("/^[\\p{L}\\p{M} .'’&()-]+\\z/u",$sender)||preg_match_all('/\\p{L}/u',$sender)<2)throw new RuntimeException('Enter a valid sender / account name with at least two letters (for example, Daniel Harris).');
         $reference=trim($this->scalar($input['transaction_reference']??null));
         if($reference===''||$this->length($reference)>100)throw new RuntimeException('Enter a transaction or reference ID (maximum 100 characters).');
+        if(!preg_match('~^[\\p{L}\\p{N} ._/-]+\\z~u',$reference)||!preg_match('/[\\p{L}\\p{N}]/u',$reference))throw new RuntimeException('Enter a valid transaction / reference ID containing letters or numbers (for example, TXN-123456).');
         $amount=trim($this->scalar($input['amount']??null));
         if(!preg_match('/^\d{1,8}(?:\.\d{1,2})?$/',$amount)||(float)$amount<=0)throw new RuntimeException('Enter a valid paid amount.');
         $paidAtInput=$this->scalar($input['paid_at']??null);

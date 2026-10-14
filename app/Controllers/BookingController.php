@@ -68,14 +68,15 @@ final class BookingController extends Controller
         foreach(array_values($input) as $index=>$row){
             if(!is_array($row)){$errors[]='Passenger '.($index+1).' details are invalid.';continue;}
             $first=trim($this->scalar($row['first_name']??null));$last=trim($this->scalar($row['last_name']??null));$dob=$this->scalar($row['date_of_birth']??null);$gender=$this->scalar($row['gender']??'unspecified');$passport=trim($this->scalar($row['passport_number']??null));$country=strtoupper(trim($this->scalar($row['passport_country']??null)));
-            if($first===''||$this->length($first)>100||preg_match('/[\x00-\x1F\x7F]/u',$first))$errors[]='Enter a valid first name for passenger '.($index+1).'.';
-            if($last===''||$this->length($last)>100||preg_match('/[\x00-\x1F\x7F]/u',$last))$errors[]='Enter a valid last name for passenger '.($index+1).'.';
-            $date=\DateTimeImmutable::createFromFormat('!Y-m-d',$dob);$dateErrors=\DateTimeImmutable::getLastErrors();
-            if(!$date||($dateErrors!==false&&($dateErrors['warning_count']||$dateErrors['error_count']))||$date->format('Y-m-d')!==$dob||$dob>date('Y-m-d'))$errors[]='Enter a valid date of birth for passenger '.($index+1).'.';
+            if($first===''||$this->length($first)>100||!preg_match('/^\p{L}[\p{L}\p{M}]*(?: +\p{L}[\p{L}\p{M}]*)*\z/u',$first))$errors[]='Passenger '.($index+1).' first name must contain only letters and spaces (maximum 100 characters).';
+            if($last===''||$this->length($last)>100||!preg_match('/^\p{L}[\p{L}\p{M}]*(?: +\p{L}[\p{L}\p{M}]*)*\z/u',$last))$errors[]='Passenger '.($index+1).' last name must contain only letters and spaces (maximum 100 characters).';
+            $date=preg_match('/^\d{4}-\d{2}-\d{2}\z/',$dob)?\DateTimeImmutable::createFromFormat('!Y-m-d',$dob):false;$dateErrors=$date?\DateTimeImmutable::getLastErrors():false;
+            if(!$date||($dateErrors!==false&&($dateErrors['warning_count']||$dateErrors['error_count']))||$date->format('Y-m-d')!==$dob||$dob<'1000-01-01'||$dob>date('Y-m-d'))$errors[]='Enter a valid date of birth, not in the future, for passenger '.($index+1).'.';
             if(!in_array($gender,['female','male','other','unspecified'],true))$errors[]='Choose a valid gender for passenger '.($index+1).'.';
-            if(strlen($passport)>30)$errors[]='Passport number must be 30 characters or fewer.';
+            if($passport!==''&&!preg_match('/^[A-Za-z0-9]{1,30}\z/',$passport))$errors[]='Passenger '.($index+1).' passport number must contain only letters and numbers (maximum 30 characters).';
             if($country!==''&&!preg_match('/^[A-Z]{2}$/',$country))$errors[]='Passport country must be a two-letter country code.';
             if($passport!==''&&$country==='')$errors[]='Choose a passport country when a passport number is provided.';
+            if($country!==''&&$passport==='')$errors[]='Enter a passport number when a passport country is provided.';
             $data[]=['first_name'=>$first,'last_name'=>$last,'date_of_birth'=>$dob,'gender'=>$gender,'passport_number'=>$passport===''?null:$passport,'passport_country'=>$country===''?null:$country];
         }
         return ['errors'=>$errors,'data'=>$data];

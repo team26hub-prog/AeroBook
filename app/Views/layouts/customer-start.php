@@ -9,6 +9,7 @@ require BASE_PATH.'/app/Views/layouts/header.php';
 ?>
 <link rel="stylesheet" href="/assets/css/customer.css">
 <link rel="stylesheet" href="/assets/css/customer-layout.css">
+<link rel="stylesheet" href="/assets/css/date-picker.css">
 <div class="customer-app">
     <header class="customer-topbar<?= $isAuthenticated?'':' customer-topbar-guest' ?>">
         <button class="customer-menu-toggle" type="button" aria-expanded="false" aria-controls="customer-sidebar" aria-label="Open customer navigation"><span aria-hidden="true"><i></i><i></i><i></i></span></button>

@@ -18,18 +18,15 @@ require BASE_PATH.'/app/Views/layouts/customer-start.php';
             <fieldset class="passenger-fields" data-passenger="<?= $i ?>" <?= $visible?'':'hidden' ?>><legend>Passenger <?= $i+1 ?></legend>
                 <label>First name<input name="passengers[<?= $i ?>][first_name]" maxlength="100" autocomplete="given-name" value="<?= $e($person['first_name']??'') ?>" <?= $visible?'required':'disabled' ?>></label>
                 <label>Last name<input name="passengers[<?= $i ?>][last_name]" maxlength="100" autocomplete="family-name" value="<?= $e($person['last_name']??'') ?>" <?= $visible?'required':'disabled' ?>></label>
-                <label>Date of birth<input type="date" name="passengers[<?= $i ?>][date_of_birth]" max="<?= $e(date('Y-m-d')) ?>" value="<?= $e($person['date_of_birth']??'') ?>" <?= $visible?'required':'disabled' ?>></label>
+                <label>Date of birth<input type="date" name="passengers[<?= $i ?>][date_of_birth]" min="1000-01-01" max="<?= $e(date('Y-m-d')) ?>" value="<?= $e($person['date_of_birth']??'') ?>" <?= $visible?'required':'disabled' ?>></label>
                 <label>Gender<select name="passengers[<?= $i ?>][gender]" <?= $visible?'':'disabled' ?>><?php foreach(['unspecified'=>'Prefer not to say','female'=>'Female','male'=>'Male','other'=>'Other'] as $value=>$label): ?><option value="<?= $value ?>" <?= ($person['gender']??'unspecified')===$value?'selected':'' ?>><?= $label ?></option><?php endforeach ?></select></label>
-                <label>Passport number <span class="optional-label">Optional</span><input name="passengers[<?= $i ?>][passport_number]" maxlength="30" value="<?= $e($person['passport_number']??'') ?>" <?= $visible?'':'disabled' ?>></label>
-                <label>Passport country <span class="optional-label">Optional · two-letter code</span><input name="passengers[<?= $i ?>][passport_country]" maxlength="2" pattern="[A-Za-z]{2}" value="<?= $e($person['passport_country']??'') ?>" <?= $visible?'':'disabled' ?>></label>
+                <label><span class="passenger-field-heading">Passport number <span class="optional-label">Optional</span></span><input name="passengers[<?= $i ?>][passport_number]" maxlength="30" value="<?= $e($person['passport_number']??'') ?>" <?= $visible?'':'disabled' ?>></label>
+                <label><span class="passenger-field-heading">Passport country <span class="optional-label">Optional · two-letter code</span></span><input name="passengers[<?= $i ?>][passport_country]" maxlength="2" pattern="[A-Za-z]{2}" value="<?= $e($person['passport_country']??'') ?>" <?= $visible?'':'disabled' ?>></label>
             </fieldset>
         <?php endfor ?>
         </div>
         <div class="booking-actions"><a href="/flights">Change flight</a><button class="booking-button" type="submit">Review booking</button></div>
     </form>
 </div>
-<script>
-const passengerCount=document.getElementById('passenger-count');
-passengerCount?.addEventListener('change',()=>document.querySelectorAll('[data-passenger]').forEach((fieldset,index)=>{const active=index<Number(passengerCount.value);fieldset.hidden=!active;fieldset.querySelectorAll('input,select').forEach(input=>{input.disabled=!active;if(input.name.endsWith('[first_name]')||input.name.endsWith('[last_name]')||input.name.endsWith('[date_of_birth]'))input.required=active})}));
-</script>
+<script defer src="/assets/js/passenger-validation.js"></script>
 <?php require BASE_PATH.'/app/Views/layouts/customer-end.php'; ?>
