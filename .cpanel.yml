@@ -1,12 +1,12 @@
 ---
-# Default: main domain. For another domain, use its exact cPanel document root.
+# Target: aerobook.betabox.cx. Confirm this folder in cPanel > Domains.
 # Clone the Git repository OUTSIDE this directory (e.g. $HOME/repositories/aerobook).
 # Push this file to Git, then use Update from Remote before Deploy HEAD Commit.
 deployment:
   tasks:
     - |
       set -eu
-      export DEPLOYPATH="$HOME/public_html"
+      export DEPLOYPATH="$HOME/aerobook.betabox.cx"
       test -d "$DEPLOYPATH" || { echo "Deployment failed: document root $DEPLOYPATH does not exist." >&2; exit 1; }
       test -f public/index.php || { echo "Deployment failed: run from the AeroBook Git checkout." >&2; exit 1; }
       test -x /usr/bin/rsync || { echo "Deployment failed: ask your host to install /usr/bin/rsync." >&2; exit 1; }
