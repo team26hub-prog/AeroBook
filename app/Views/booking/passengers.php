@@ -4,7 +4,7 @@ $e=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8')
 $old=is_array($old)?array_values($old):[];$passengerCount=max(1,min(9,count($old)));$success=null;
 require BASE_PATH.'/app/Views/layouts/customer-start.php';
 ?>
-<link rel="stylesheet" href="/assets/css/booking.css">
+<link rel="stylesheet" href="/assets/css/booking.css?v=passenger-errors-2">
 <div class="booking-page">
     <a class="booking-back" href="/flights/details?id=<?= (int)$flight['id'] ?>">Back to flight details</a>
     <div class="booking-heading"><p class="customer-eyebrow">Step 1 of 2</p><h1>Passenger details</h1><p>Enter the details for everyone travelling. Seat selection and payment are not part of this step.</p></div>
