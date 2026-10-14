@@ -7,7 +7,7 @@
 @media(max-width:500px){.payment-booking-card{align-items:stretch;flex-direction:column}.payment-booking-action{justify-items:stretch}.payment-booking-action .payment-button{width:100%}.payment-summary-grid,.payment-method-grid,.payment-form{grid-template-columns:minmax(0,1fr)}.payment-form .payment-remarks,.payment-form>.payment-button{grid-column:auto}.payment-form>.payment-button{width:100%}.payment-passengers p{font-size:.8rem}.payment-history-heading{align-items:flex-start}.payment-history-heading strong{line-height:1.45}.payment-history-card dl{grid-template-columns:minmax(0,1fr)}.payment-review-notice{font-size:.9rem}}
 .payment-booking-list .payment-booking-main{min-width:0;overflow-wrap:anywhere}
 .payment-booking-list .payment-booking-action{max-width:100%;min-width:0;flex:0 0 auto}
-.payment-booking-list .payment-booking-action .payment-button{width:fit-content;max-width:100%}
+.payment-booking-list .payment-booking-action .payment-button{box-sizing:border-box;width:190px;max-width:100%;min-height:44px;line-height:1.4}
 @media(max-width:500px){.payment-booking-list .payment-booking-action{width:100%}.payment-booking-list .payment-booking-action .payment-button{width:100%}}
 .payment-form .payment-field-error{color:#963f3f;font-size:.75rem;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
 .payment-form .payment-field-error:empty{display:none}
