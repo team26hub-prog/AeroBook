@@ -12,13 +12,13 @@ body .customer-content .booking-page.booking-confirmation{width:100%;max-width:9
 .booking-confirmation .booking-flight-summary>div{min-width:0;gap:7px}.booking-confirmation .booking-flight-summary strong{overflow-wrap:anywhere;line-height:1.5}
 .booking-confirmation .review-passengers>p{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0;padding:12px 0;border-top:1px solid #d8e5e9;overflow-wrap:anywhere}
 .booking-confirmation .review-passengers>p span{flex-shrink:0;margin:0;color:#536c7c;font-size:.83rem}
-.booking-confirmation .booking-actions{display:grid;align-items:stretch;grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(0,1fr));gap:12px;padding-top:16px;border-top:1px solid #d8e5e9}
-.booking-confirmation .booking-actions>a{display:flex;align-items:center;justify-content:center;min-width:0;min-height:48px;margin:0;padding:12px;text-align:center;line-height:1.4;border-radius:8px;overflow-wrap:anywhere}
+.booking-confirmation .booking-actions{display:grid;align-items:stretch;grid-template-columns:repeat(3,auto);justify-content:start;gap:10px;padding-top:16px;border-top:1px solid #d8e5e9}
+.booking-confirmation .booking-actions>a{display:flex;align-items:center;justify-content:center;min-width:0;min-height:38px;margin:0;padding:8px 14px;font-size:.8rem;text-align:center;line-height:1.4;border-radius:7px;overflow-wrap:anywhere}
 .booking-confirmation .booking-actions>a:not(.booking-button){border:1px solid #bfdfdf;background:#e2f5f3;color:#00758f}.booking-confirmation .booking-actions>a:not(.booking-button):hover{background:#ccece8;color:#08756d}
 @media(max-width:720px){.booking-confirmation .booking-flight-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){
  .booking-confirmation .confirmation-reference{grid-template-columns:minmax(0,1fr) auto;padding:15px}
  .booking-confirmation .confirmation-reference>span:first-child{grid-column:1/-1}
- .booking-confirmation .booking-actions{grid-template-columns:minmax(0,1fr)}
+ .booking-confirmation .booking-actions{grid-template-columns:minmax(0,1fr);justify-content:stretch}
  .booking-confirmation .review-passengers>p{align-items:flex-start;flex-direction:column;gap:4px}
 }
